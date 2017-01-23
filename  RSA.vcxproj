@@ -71,7 +71,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="integer.cpp" />
     <ClCompile Include="rsa.cpp" />
   </ItemGroup>
   <ItemGroup>

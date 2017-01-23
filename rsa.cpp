@@ -49,15 +49,16 @@ int main(int argc, const char * argv[])
 {    
     clock_t c_start, c_stop;
 
-	integer p;
-	integer q;
-	integer modulus(_modulus);
-	integer message;
-	integer result;
+	integer<32> p;
+	integer<32> q;
+	integer<32> modulus(_modulus);
+	integer<32> message;
+	integer<32> result;
 
-	modulus = 1;
-	//modulus = integer(0xFF) + integer(2);
-	modulus +=  7;
+	modulus = 10;
+	//modulus = integer<32>(0xFF) + integer<32>(2);
+
+	modulus *=  7;
 	modulus.print();
 	return 0;
 
@@ -65,11 +66,7 @@ int main(int argc, const char * argv[])
 	printf("\n\tp:"); p.print();
 	printf("\n\tq:"); q.print();
     
-	std::string source = std::string("#pragma OPENCL EXTENSION cl_khr_byte_addressable_store : enable\n#define PLUS 1\n#define MINUS -1\n#define MAXDIGITS ");
-    char num[10];
-    sprintf(num, "%d", MAXDIGITS);
-	source += num;
-	source += "\n";
+	std::string source = std::string("#pragma OPENCL EXTENSION cl_khr_byte_addressable_store : enable\n#define PLUS 1\n#define MINUS -1\n");
 	source += readFile("kernel_rsa.cl");
 
     //Set OpenCL Context
@@ -130,16 +127,16 @@ int main(int argc, const char * argv[])
     cl_mem cl_p, cl_q, cl_M, cl_result;
     cl_int status = CL_SUCCESS;
     
-    cl_p = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer), &p, &status);
+    cl_p = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer<32>), &p, &status);
     if (status != CL_SUCCESS || cl_p == NULL) { printf("\nCreate p: %i", status); }
 
-    cl_q = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer), &q, &status);
+    cl_q = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer<32>), &q, &status);
     if (status != CL_SUCCESS || cl_q == NULL) { printf("\nCreate q: %i", status); }
 
-    cl_M = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer), &message, &status);
+    cl_M = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer<32>), &message, &status);
     if (status != CL_SUCCESS || cl_M == NULL) { printf("\nCreate M: %i", status); }
 
-    cl_result = clCreateBuffer(context, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer), &result, &status);
+    cl_result = clCreateBuffer(context, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer<32>), &result, &status);
     if (status != CL_SUCCESS || cl_result == NULL) { printf("\nCreate result: %i", status); }
 
 	c_start = clock(); //Create a clock to benchmark the time taken for execution
@@ -162,7 +159,7 @@ int main(int argc, const char * argv[])
 
     clFinish(queue);
 
-    status = clEnqueueReadBuffer(queue, cl_result, CL_TRUE, 0, sizeof(integer), &result, 0, NULL, NULL);
+    status = clEnqueueReadBuffer(queue, cl_result, CL_TRUE, 0, sizeof(integer<32>), &result, 0, NULL, NULL);
     if (status != CL_SUCCESS) { printf("\nclEnqueueReadBuffer: %i", status); }
 
     printf("\nEncrypted Result: ");
