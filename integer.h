@@ -21,11 +21,12 @@ public:
 		*this = n;
 	}
 
-	integer<BITS>(const byte* n)
+	integer<BITS>(const void* n)
 	{
+		const word* ptr = (word*)n;
 		for (int i = 0; i < size(); i++)
 		{
-			buffer[i] = n[i];
+			buffer[i] = ptr[i];
 		}
 	}
 
@@ -237,7 +238,11 @@ public:
 			if (i % 8 == 0 && i != 0)
 				printf("\n");
 			
-			printf(fmt, buffer[i]);
+			for (int j = 0; j < sizeof(word); j++)
+			{
+				printf("%2.2x", ((byte*)&buffer[i])[j]);
+			}
+			printf(" ");
 		}
 		printf("\n");
 	}

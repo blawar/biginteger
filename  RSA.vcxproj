@@ -81,6 +81,9 @@
     <ClCompile>
       <Optimization>Full</Optimization>
     </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="rsa.cpp" />

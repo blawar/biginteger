@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <chrono>
 
 #include <CL/cl.h>
 #include "integer.h"
@@ -66,8 +67,15 @@ int main(int argc, const char * argv[])
 	}
 	printf("i: %d\n", i);*/
 
-	modulus = 10;
-	modulus += 1;
+	/*modulus = 10;
+	std::chrono::milliseconds start = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
+	unsigned long i;
+	for (i = 0; i < 0x9FFFF; i++)
+	{
+		modulus += 1;
+	}
+	std::chrono::milliseconds end = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
+	printf("ops/sec = %d\n", i * 1000 / (end - start).count());*/
 	//modulus = integer<1024>(0xFF) + integer<1024>(2);
 
 	//modulus.pow(1);
