@@ -78,7 +78,8 @@ int main(int argc, const char * argv[])
 	printf("ops/sec = %d\n", i * 1000 / (end - start).count());*/
 	//modulus = integer<1024>(0xFF) + integer<1024>(2);
 
-	//modulus.pow(1);
+	p = 3000000;
+	modulus *= p;
 	modulus.print();
 	return 0;
 

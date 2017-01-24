@@ -39,15 +39,7 @@ public:
 	integer<BITS>& operator=(int n)
 	{
 		memset(buffer, 0, size()  * sizeof(word));
-
-		unsigned long i = 0;
-
-		do
-		{
-			buffer[size() - i - 1] = ((word*)&n)[i];
-			i++;
-		}
-		while (i * sizeof(word) < sizeof(n) && i < size());
+		buffer[size() - 1] = n;
 
 		return *this;
 	}
@@ -58,7 +50,7 @@ public:
 		integer<BITS> i = 0;
 		while(i < n)
 		{
-			//temp += *this;
+			temp += *this;
 			i++;
 		}
 		*this = temp;
@@ -88,16 +80,28 @@ public:
 	template<size_t PBITS>
 	bool operator<(integer<PBITS> n)
 	{
-		unsigned long i = size();
-		while(i > 0)
+		unsigned long sz = size();
+		unsigned long i = 0;
+		while(i < sz)
 		{
-			i--;
 			word a = read(i);
 			word b = n.read(i);
+
+			if (a == b)
+			{
+				i++;
+				continue;
+			}
+
 			if (a < b)
 			{
 				return true;
 			}
+			else if (a > b)
+			{
+				return false;
+			}
+			i++;
 		}
 		return false;
 	}
@@ -114,9 +118,10 @@ public:
 	{
 		word num = 0;
 		int carry = 0;
-		int sz = size();
-		for (int i = 0; i < size(); i++)
+		long i = size();
+		do
 		{
+			i--;
 			word a = read(i);
 			word b = n.read(i);
 			num = a + b + carry;
@@ -131,21 +136,25 @@ public:
 			}
 
 			write(i, num);
-		}
+		} while (i > 0);
 
 		return *this;
 	}
 
 	integer<BITS>& operator++(int)
 	{
-		int num = 0;
-		for (int i = 0; i < size(); i++)
+		word num = 0;
+		int carry = 0;
+		long i = size();
+		do
 		{
-			num = read(i) + 1;
+			i--;
+			word a = read(i);
+			num = a + 1 + carry;
 
-			if (num >= 0x100)
+			if (num < a)
 			{
-				num = num - 0x100;
+				carry = 1;
 			}
 			else
 			{
@@ -154,7 +163,7 @@ public:
 			}
 
 			write(i, num);
-		}
+		} while (i > 0);
 		return *this;
 	}
 
@@ -163,7 +172,7 @@ public:
 		long num = 0;
 
 
-		for (unsigned long i = 0; i < size(); i++)
+		for (long i = 0; i < size(); i++)
 		{
 			num = read(i) - 1;
 
@@ -178,7 +187,7 @@ public:
 			}
 
 			write(i, num);
-		}
+		};
 		return *this;
 	}
 
