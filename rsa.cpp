@@ -49,16 +49,28 @@ int main(int argc, const char * argv[])
 {    
     clock_t c_start, c_stop;
 
-	integer<32> p;
-	integer<32> q;
-	integer<32> modulus(_modulus);
-	integer<32> message;
-	integer<32> result;
+	integer<1024> p;
+	integer<1024> q;
+	integer<1024> modulus(_modulus);
+	integer<1024> message;
+	integer<1024> result;
+	/*modulus = 0xFFFFFFFF;
+	for (integer<1024> i = 0; i < modulus; i++)
+	{
+		//
+	}*/
+	/*unsigned long i = 0;
+	while(i < 0xFFFFFFFF)
+	{
+		i++;
+	}
+	printf("i: %d\n", i);*/
 
 	modulus = 10;
-	//modulus = integer<32>(0xFF) + integer<32>(2);
+	modulus += 1;
+	//modulus = integer<1024>(0xFF) + integer<1024>(2);
 
-	modulus *=  7;
+	//modulus.pow(1);
 	modulus.print();
 	return 0;
 
@@ -127,16 +139,16 @@ int main(int argc, const char * argv[])
     cl_mem cl_p, cl_q, cl_M, cl_result;
     cl_int status = CL_SUCCESS;
     
-    cl_p = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer<32>), &p, &status);
+    cl_p = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer<1024>), &p, &status);
     if (status != CL_SUCCESS || cl_p == NULL) { printf("\nCreate p: %i", status); }
 
-    cl_q = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer<32>), &q, &status);
+    cl_q = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer<1024>), &q, &status);
     if (status != CL_SUCCESS || cl_q == NULL) { printf("\nCreate q: %i", status); }
 
-    cl_M = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer<32>), &message, &status);
+    cl_M = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer<1024>), &message, &status);
     if (status != CL_SUCCESS || cl_M == NULL) { printf("\nCreate M: %i", status); }
 
-    cl_result = clCreateBuffer(context, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer<32>), &result, &status);
+    cl_result = clCreateBuffer(context, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(integer<1024>), &result, &status);
     if (status != CL_SUCCESS || cl_result == NULL) { printf("\nCreate result: %i", status); }
 
 	c_start = clock(); //Create a clock to benchmark the time taken for execution
@@ -159,7 +171,7 @@ int main(int argc, const char * argv[])
 
     clFinish(queue);
 
-    status = clEnqueueReadBuffer(queue, cl_result, CL_TRUE, 0, sizeof(integer<32>), &result, 0, NULL, NULL);
+    status = clEnqueueReadBuffer(queue, cl_result, CL_TRUE, 0, sizeof(integer<1024>), &result, 0, NULL, NULL);
     if (status != CL_SUCCESS) { printf("\nclEnqueueReadBuffer: %i", status); }
 
     printf("\nEncrypted Result: ");

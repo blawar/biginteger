@@ -2,7 +2,10 @@
 #define PLUS	1
 #define MINUS	-1
 
+#include <limits>
+
 typedef unsigned char byte;
+typedef size_t word;
 
 template<size_t BITS>
 class integer
@@ -28,17 +31,23 @@ public:
 
 	integer<BITS>(integer<BITS>& n)
 	{
-		memcpy(buffer, (const byte*)n, size());
+		memcpy(buffer, (const word*)n, size() * sizeof(word));
 	}
 
-	operator byte*() { return buffer; }
+	operator word*() { return buffer; }
 	integer<BITS>& operator=(int n)
 	{
-		memset(buffer, 0, size());
-		for (int i = 0; i < sizeof(n) && i < size(); i++)
+		memset(buffer, 0, size()  * sizeof(word));
+
+		unsigned long i = 0;
+
+		do
 		{
-			buffer[size() - i - 1] = ((byte*)&n)[i];
+			buffer[size() - i - 1] = ((word*)&n)[i];
+			i++;
 		}
+		while (i * sizeof(word) < sizeof(n) && i < size());
+
 		return *this;
 	}
 
@@ -48,7 +57,7 @@ public:
 		integer<BITS> i = 0;
 		while(i < n)
 		{
-			temp += *this;
+			//temp += *this;
 			i++;
 		}
 		*this = temp;
@@ -82,8 +91,8 @@ public:
 		while(i > 0)
 		{
 			i--;
-			byte a = read(i);
-			byte b = n.read(i);
+			word a = read(i);
+			word b = n.read(i);
 			if (a < b)
 			{
 				return true;
@@ -94,23 +103,30 @@ public:
 
 	integer<BITS> operator+(integer<BITS> n)
 	{
-		integer temp(n);
+		integer<BITS> temp(n);
 		temp += n;
 
 		return temp;
 	}
+
 	integer<BITS> operator+=(integer<BITS> n)
 	{
-		int num = 0;
+		word num = 0;
 		int carry = 0;
+		int sz = size();
 		for (int i = 0; i < size(); i++)
 		{
-			num = read(i) + n.read(i) + carry;
+			word a = read(i);
+			word b = n.read(i);
+			num = a + b + carry;
 
-			if (num >= 0x100)
+			if (num < a || num < b)
 			{
-				num = num - 0x100;
 				carry = 1;
+			}
+			else
+			{
+				carry = 0;
 			}
 
 			write(i, num);
@@ -165,31 +181,71 @@ public:
 		return *this;
 	}
 
-	byte read(unsigned long i)
+	integer<BITS>& pow(long exponent)
 	{
-		return buffer[size() - i - 1];
+		integer<BITS> temp = 1;
+		for (long i = 0; i < exponent; i++)
+		{
+			temp *= *this;
+		}
+		*this = temp;
+		return *this;
 	}
 
-	void write(unsigned long i, byte value)
+	word read(unsigned long i) const
 	{
-		buffer[size() - i - 1] = value;
+		return buffer[i];
+	}
+
+	void write(unsigned long i, word value)
+	{
+		buffer[i] = value;
 	}
 
 	void print()
 	{
+		const char* fmt;
+		switch (sizeof(word))
+		{
+		case 1:
+			fmt = "%2.2x ";
+			break;
+		case 2:
+			fmt = "%4.4x ";
+			break;
+		case 3:
+			fmt = "%6.6x ";
+			break;
+		case 4:
+			fmt = "%8.8x ";
+			break;
+		case 5:
+			fmt = "%10.10x ";
+			break;
+		case 6:
+			fmt = "%12.12x ";
+			break;
+		case 7:
+			fmt = "%14.14x ";
+			break;
+		case 8:
+			fmt = "%16.16x ";
+			break;
+		}
 		for (unsigned long i = 0; i < size(); i++)
 		{
 			if (i % 8 == 0 && i != 0)
 				printf("\n");
-			printf("%2.2x ", buffer[i]);
+			
+			printf(fmt, buffer[i]);
 		}
 		printf("\n");
 	}
 
-	unsigned long size() const
+	static unsigned long size()
 	{
-		return BITS / 8;
+		return BITS / 8 / sizeof(word);
 	}
-private:
-	byte buffer[BITS / 8];
+//private:
+	word buffer[BITS / 8 / sizeof(word)];
 };
