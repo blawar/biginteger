@@ -69,9 +69,9 @@ int main(int argc, const char * argv[])
 
 	std::chrono::milliseconds start = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
 	unsigned long i;
-	for (i = 0; i < 10; i++)
+	for (i = 0; i < 0x10000; i++)
 	{
-		//modulus *= modulus;
+		modulus *= 3;
 	}
 	std::chrono::milliseconds end = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
 	if ((end - start).count() == 0)

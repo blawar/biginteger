@@ -4,7 +4,12 @@
 
 #include <limits>
 
+typedef unsigned long long uint64;
+typedef unsigned long long uint32;
+typedef unsigned long long uint16;
+typedef unsigned char uint8;
 typedef unsigned char byte;
+
 typedef unsigned long word;
 typedef unsigned long long dword;
 
@@ -45,7 +50,6 @@ public:
 		memcpy(buffer, (const word*)n, MIN(size() * sizeof(word), n.size() * sizeof(word)));
 	}
 
-	operator word*() { return buffer; }
 	integer<BITS>& operator=(int n)
 	{
 		memset(buffer, 0, size() * sizeof(word));
@@ -59,6 +63,16 @@ public:
 		return *this;
 	}
 
+	integer<BITS>& operator=(word n)
+	{
+		memset(buffer, 0, size() * sizeof(word));
+		buffer[0] = n;
+
+		return *this;
+	}
+
+	operator word*() { return buffer; }
+
 	integer<BITS>& operator*=(integer<BITS> n)
 	{
 		integer<BITS * 2> temp = 0;
@@ -71,10 +85,13 @@ public:
 				for (j = 0; j < n.size(); ++j)
 				{
 					if (n.read(j) != 0) {
-						dword c = dword((*this)[i]) * n[j] + temp[i + j];
-						temp[i + j] = c;// % std::numeric_limits<word>::max();
+						//integer<sizeof(word) * 8 * 2> c = ((*this)[i]) * n[j] + temp[i + j];
+						integer<sizeof(word) * 8 * 2> c = (*this)[i];
+						c *= n[j];
+						c += temp[i + j];
+
+						temp[i + j] = c;
 						temp[i + j + 1] += c / std::numeric_limits<word>::max();
-						//temp[i + j] %= std::numeric_limits<word>::max();
 					}
 				}
 			}
@@ -296,4 +313,65 @@ public:
 	}
 //private:
 	word buffer[BITS / 8 / sizeof(word)];
+};
+
+
+template<>
+class integer<64>
+{
+public:
+	constexpr integer() : t() { }
+	constexpr integer(const uint64&t) : t(t) {}
+	operator uint64& () { return t; }
+	constexpr operator const uint64& () const { return t; }
+
+	const uint64* operator& () const { return &t; }
+	uint64* operator& () { return &t; }
+private:
+	uint64 t;
+};
+
+template<>
+class integer<32>
+{
+public:
+	constexpr integer() : t() { }
+	constexpr integer(const uint32&t) : t(t) {}
+	operator uint32& () { return t; }
+	constexpr operator const uint32& () const { return t; }
+
+	const uint32* operator& () const { return &t; }
+	uint32* operator& () { return &t; }
+private:
+	uint32 t;
+};
+
+template<>
+class integer<16>
+{
+public:
+	constexpr integer() : t() { }
+	constexpr integer(const uint16&t) : t(t) {}
+	operator uint16& () { return t; }
+	constexpr operator const uint16& () const { return t; }
+
+	const uint16* operator& () const { return &t; }
+	uint16* operator& () { return &t; }
+private:
+	uint16 t;
+};
+
+template<>
+class integer<8>
+{
+public:
+	constexpr integer() : t() { }
+	constexpr integer(const uint8&t) : t(t) {}
+	operator uint8& () { return t; }
+	constexpr operator const uint8& () const { return t; }
+
+	const uint8* operator& () const { return &t; }
+	uint8* operator& () { return &t; }
+private:
+	uint8 t;
 };
