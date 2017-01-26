@@ -5,7 +5,10 @@
 #include <limits>
 
 typedef unsigned char byte;
-typedef size_t word;
+typedef unsigned long word;
+typedef unsigned long long dword;
+
+#define MIN(a,b) (((a)<(b))?(a):(b))
 
 template<size_t BITS>
 class integer
@@ -26,32 +29,55 @@ public:
 		const word* ptr = (word*)n;
 		for (int i = 0; i < size(); i++)
 		{
-			buffer[i] = ptr[i];
+			byte* a = (byte*)&buffer[i];
+			const byte* b = (byte*)&ptr[size() - i - 1];
+			for (int j = 0; j < sizeof(word); j++)
+			{
+				a[j] = b[sizeof(word) - j - 1];
+			}
 		}
 	}
 
-	integer<BITS>(integer<BITS>& n)
+	template<size_t PBITS>
+	integer<BITS>(integer<PBITS>& n)
 	{
-		memcpy(buffer, (const word*)n, size() * sizeof(word));
+		memset(buffer, 0, size() * sizeof(word));
+		memcpy(buffer, (const word*)n, MIN(size() * sizeof(word), n.size() * sizeof(word)));
 	}
 
 	operator word*() { return buffer; }
 	integer<BITS>& operator=(int n)
 	{
-		memset(buffer, 0, size()  * sizeof(word));
-		buffer[size() - 1] = n;
+		memset(buffer, 0, size() * sizeof(word));
+		for (int i = 0; i < sizeof(n) && i < sizeof(word); i++)
+		{
+			((byte*)&buffer[0])[i] = ((byte*)&n)[i];
+		}
+		//memset(buffer, 0, size()  * sizeof(word));
+		//buffer[size() - 1] = n;
 
 		return *this;
 	}
 
 	integer<BITS>& operator*=(integer<BITS> n)
 	{
-		integer<BITS> temp = 0;
-		integer<BITS> i = 0;
-		while(i < n)
+		integer<BITS * 2> temp = 0;
+
+		int i, j;
+		for (i = 0; i < size(); ++i)
 		{
-			temp += *this;
-			i++;
+			if (read(i) != 0)
+			{
+				for (j = 0; j < n.size(); ++j)
+				{
+					if (n.read(j) != 0) {
+						dword c = dword((*this)[i]) * n[j] + temp[i + j];
+						temp[i + j] = c;// % std::numeric_limits<word>::max();
+						temp[i + j + 1] += c / std::numeric_limits<word>::max();
+						//temp[i + j] %= std::numeric_limits<word>::max();
+					}
+				}
+			}
 		}
 		*this = temp;
 		return *this;
@@ -118,10 +144,9 @@ public:
 	{
 		word num = 0;
 		int carry = 0;
-		long i = size();
-		do
+		long len = size();
+		for (long i = 0; i < len; i++)
 		{
-			i--;
 			word a = read(i);
 			word b = n.read(i);
 			num = a + b + carry;
@@ -136,7 +161,7 @@ public:
 			}
 
 			write(i, num);
-		} while (i > 0);
+		}
 
 		return *this;
 	}
@@ -145,10 +170,9 @@ public:
 	{
 		word num = 0;
 		int carry = 0;
-		long i = size();
-		do
+		long len = size();
+		for(long i=0; i < len; i++)
 		{
-			i--;
 			word a = read(i);
 			num = a + 1 + carry;
 
@@ -163,7 +187,7 @@ public:
 			}
 
 			write(i, num);
-		} while (i > 0);
+		};
 		return *this;
 	}
 
@@ -202,7 +226,17 @@ public:
 		return *this;
 	}
 
-	word read(unsigned long i) const
+	word& operator[](unsigned long i)
+	{
+		return buffer[i];
+	}
+
+	const word& operator[](unsigned long i) const
+	{
+		return buffer[i];
+	}
+
+	const word& read(unsigned long i) const
 	{
 		return buffer[i];
 	}
@@ -249,7 +283,7 @@ public:
 			
 			for (int j = 0; j < sizeof(word); j++)
 			{
-				printf("%2.2x", ((byte*)&buffer[i])[j]);
+				printf("%2.2x", ((byte*)&buffer[size() - i - 1])[sizeof(word) - j - 1]);
 			}
 			printf(" ");
 		}
