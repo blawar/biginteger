@@ -86,13 +86,7 @@ public:
 	word* operator &() { return buffer; }
 	//operator const word& () const { return buffer[0]; }
 
-	/*static integer<sizeof(unsigned long) * 8 * 2> operator*(unsigned long a, unsigned long b)
-	{
-		integer<sizeof(unsigned long) * 8 * 2)> temp = 0;
-		return temp;
-	}*/
-
-	integer<BITS + (sizeof(unsigned long) * 8)> operator*(unsigned long n)
+	integer<BITS + (sizeof(word) * 8)> operator*(word n)
 	{
 		integer<BITS + (sizeof(n) * 8)> temp = 0;
 
@@ -101,7 +95,7 @@ public:
 		{
 			if (read(i) != 0)
 			{
-				integer<MIN(sizeof(word) * 8 * 2, BITS + (sizeof(n) * 8))> c = (*this)[i] * n;
+				integer<MIN(sizeof(word) * 8 * 2, BITS + (sizeof(n) * 8))> c = integer<sizeof(word) * 8>((*this)[i]) * integer<sizeof(word) * 8>(n);
 				c += temp[i];
 
 				temp[i] = c.low();
@@ -111,7 +105,7 @@ public:
 		return temp;
 	}
 
-	integer<BITS + (sizeof(unsigned long) * 8)> operator*=(unsigned long n)
+	integer<BITS + (sizeof(word) * 8)> operator*=(word n)
 	{
 		return *this = *this * n;
 	}
@@ -130,7 +124,7 @@ public:
 				{
 					if (b[j] != 0) {
 						//integer<sizeof(word) * 8 * 2> c = ((*this)[i]) * n[j] + temp[i + j];
-						integer<sizeof(word) * 8 * 2> c = (*this)[i] * b[j];
+						integer<sizeof(word) * 8 * 2> c = integer<sizeof(word) * 8>((*this)[i]) * integer<sizeof(word) * 8>(b[j]);
 						//c *= n[j];
 						c += temp[i + j];
 
@@ -421,7 +415,7 @@ public:
 		{
 			for (j = 0; j < 2; ++j)
 			{
-				uint64 c = a[i] * b[j] + temp[i + j];
+				uint64 c = (uint64)a[i] * b[j] + temp[i + j];
 
 				temp[i + j] = integer<64>(c).low();
 				temp[i + j + 1] += ((integer<64>*)&c)->high();
