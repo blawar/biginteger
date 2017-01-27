@@ -138,19 +138,39 @@ public:
 		return temp;
 	}
 
-	integer<BITS>& operator >> (unsigned long s)
+	integer<BITS>& operator >>= (unsigned long shift)
 	{
-		word carry = 0;
-		for (long i = 0; i < size(); i++)
+		word carry, s;
+		while (shift > 0)
 		{
-			if (i)
+			if (shift > sizeof(word) * 8)
 			{
-				carry = BIT_MASK(s) & (*this)[i];
-				(*this)[i] = (*this)[i] | (carry << (sizeof(word) * 8 - s));
+				s = sizeof(word) * 8;
+				shift -= sizeof(word) * 8;
 			}
-			(*this)[i] = (*this)[i] >> s;
+			else
+			{
+				s = shift;
+				shift = 0;
+			}
+			for (long i = 0; i < size(); i++)
+			{
+				if (i)
+				{
+					carry = BIT_MASK(s) & (*this)[i];
+					(*this)[i] = (*this)[i] | (carry << (sizeof(word) * 8 - s));
+				}
+				(*this)[i] = (*this)[i] >> s;
+			}
 		}
 		return *this;
+	}
+
+	integer<BITS> operator >> (unsigned long shift) const
+	{
+		integer<BITS> temp = *this;
+		temp >>= shift;
+		return temp;
 	}
 
 	template<size_t PBITS>
