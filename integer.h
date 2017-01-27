@@ -5,13 +5,12 @@
 #include <limits>
 
 typedef unsigned long long uint64;
-typedef unsigned long long uint32;
-typedef unsigned long long uint16;
+typedef unsigned long uint32;
+typedef unsigned short uint16;
 typedef unsigned char uint8;
 typedef unsigned char byte;
 
-typedef unsigned long word;
-typedef unsigned long long dword;
+typedef unsigned long long word;
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 
@@ -46,8 +45,15 @@ public:
 	template<size_t PBITS>
 	integer<BITS>(integer<PBITS>& n)
 	{
+		*this = n;
+	}
+
+	template<size_t PBITS>
+	integer<BITS>& operator=(integer<PBITS>& n)
+	{
 		memset(buffer, 0, size() * sizeof(word));
 		memcpy(buffer, (const word*)n, MIN(size() * sizeof(word), n.size() * sizeof(word)));
+		return *this;
 	}
 
 	integer<BITS>& operator=(int n)
@@ -72,10 +78,13 @@ public:
 	}
 
 	operator word*() { return buffer; }
+	word* operator &() { return buffer; }
+	//operator const word& () const { return buffer[0]; }
 
-	integer<BITS>& operator*=(integer<BITS> n)
+	template<size_t PBITS>
+	integer<BITS>& operator*=(integer<PBITS> n)
 	{
-		integer<BITS * 2> temp = 0;
+		integer<BITS + PBITS> temp = 0;
 
 		int i, j;
 		for (i = 0; i < size(); ++i)
@@ -84,14 +93,14 @@ public:
 			{
 				for (j = 0; j < n.size(); ++j)
 				{
-					if (n.read(j) != 0) {
+					if (n[j] != 0) {
 						//integer<sizeof(word) * 8 * 2> c = ((*this)[i]) * n[j] + temp[i + j];
-						integer<sizeof(word) * 8 * 2> c = (*this)[i];
-						c *= n[j];
+						integer<sizeof(word) * 8 * 2> c = (integer<sizeof(word) * 8>((*this)[i]) * integer<sizeof(word) * 8>(n[j]));
+						//c *= n[j];
 						c += temp[i + j];
 
-						temp[i + j] = c;
-						temp[i + j + 1] += c / std::numeric_limits<word>::max();
+						temp[i + j] = c.low();
+						temp[i + j + 1] += c.high();
 					}
 				}
 			}
@@ -99,6 +108,48 @@ public:
 		*this = temp;
 		return *this;
 	}
+
+	integer<BITS>& operator*=(unsigned long n)
+	{
+		integer<BITS + (sizeof(n) * 8)> temp = 0;
+
+		int i, j;
+		for (i = 0; i < size(); ++i)
+		{
+			if (read(i) != 0)
+			{
+				integer<MIN(sizeof(word) * 8 * 2, BITS + (sizeof(n) * 8))> c = (*this)[i] * n;
+				c += temp[i];
+
+				temp[i] = c.low();
+				temp[i + 1] += c.high();
+			}
+		}
+		*this = temp;
+		return *this;
+	}
+
+	/*template<size_t PBITS>
+	operator/(const integer<PBITS> &b) {
+		int i, l1 = (len - 1)*Blen, l2 = (b.len - 1)*Blen;
+		int64 x = data[len], y = b[b.len];
+		while (x)x /= 10, l1++;
+		while (y)y /= 10, l2++;
+		bignum tmp, chu, B;
+		chu = *this; B = b;
+
+		for (i = 1; i*Blen <= l1 - l2; ++i)B *= base;
+		for (i = 1; i <= (l1 - l2) % Blen; ++i)B *= 10;
+		for (i = l1 - l2; i >= 0; --i) {
+			x = 0;
+			while (chu >= B)chu -= B, x++;
+			tmp[i / Blen + 1] = tmp[i / Blen + 1] * 10 + x;
+			B /= 10;
+		}
+		tmp.len = (l1 - l2) / Blen + 1;
+		while (tmp.len >= 1 && !tmp[tmp.len])tmp.len--;
+		return tmp;
+	}*/
 
 	template<size_t PBITS>
 	bool operator==(integer<BITS> n)
@@ -307,6 +358,20 @@ public:
 		printf("\n");
 	}
 
+	integer<BITS / 2> low() const
+	{
+		integer<BITS / 2> temp;
+		memcpy(&temp, (byte*)buffer, size() / 2);
+		return temp;
+	}
+
+	integer<BITS / 2> high() const
+	{
+		integer<BITS / 2> temp;
+		memcpy(&temp, (byte*)buffer + (size() / 2), size() / 2);
+		return temp;
+	}
+
 	static unsigned long size()
 	{
 		return BITS / 8 / sizeof(word);
@@ -324,9 +389,31 @@ public:
 	constexpr integer(const uint64&t) : t(t) {}
 	operator uint64& () { return t; }
 	constexpr operator const uint64& () const { return t; }
+	integer<128> operator*(uint64 s)
+	{
+		integer<128> result;
+		uint32* temp = (uint32*)result.buffer;
+		uint32* a = (uint32*)&t;
+		uint32* b = (uint32*)&s;
+
+		int i, j;
+		for (i = 0; i < 2; ++i)
+		{
+			for (j = 0; j < 2; ++j)
+			{
+				uint64 c = a[i] * b[j] + temp[i + j];
+
+				temp[i + j] = integer<64>(c).low();
+				temp[i + j + 1] += ((integer<64>*)&c)->high();
+			}
+		}
+		return result;
+	}
 
 	const uint64* operator& () const { return &t; }
 	uint64* operator& () { return &t; }
+	uint32 low() { return t; }
+	uint32 high() { return t / 0xFFFFFFFF; }
 private:
 	uint64 t;
 };

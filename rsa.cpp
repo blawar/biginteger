@@ -67,11 +67,19 @@ int main(int argc, const char * argv[])
 	}
 	printf("i: %d\n", i);*/
 
+	/*integer<64> a = 10;
+	integer<64> b = 200;
+	integer<128> c = a * b;
+	c.print();
+	c *= 2;
+	return 0;*/
+
 	std::chrono::milliseconds start = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
+	p = 3;
 	unsigned long i;
-	for (i = 0; i < 0x10000; i++)
+	for (i = 0; i < 1; i++)
 	{
-		modulus *= 3;
+		modulus *= p;
 	}
 	std::chrono::milliseconds end = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
 	if ((end - start).count() == 0)
