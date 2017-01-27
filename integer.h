@@ -4,10 +4,10 @@
 
 #include <limits>
 
-typedef unsigned long long uint64;
-typedef unsigned long uint32;
-typedef unsigned short uint16;
-typedef unsigned char uint8;
+typedef uint64_t uint64;
+typedef uint32_t uint32;
+typedef uint16_t uint16;
+typedef uint8_t uint8;
 typedef unsigned char byte;
 
 typedef unsigned long long word;
@@ -24,6 +24,11 @@ public:
 	}
 
 	integer<BITS>(int n)
+	{
+		*this = n;
+	}
+
+	integer<BITS>(word n)
 	{
 		*this = n;
 	}
@@ -56,7 +61,7 @@ public:
 		return *this;
 	}
 
-	integer<BITS>& operator=(int n)
+	/*integer<BITS>& operator=(int n)
 	{
 		memset(buffer, 0, size() * sizeof(word));
 		for (int i = 0; i < sizeof(n) && i < sizeof(word); i++)
@@ -67,7 +72,7 @@ public:
 		//buffer[size() - 1] = n;
 
 		return *this;
-	}
+	}*/
 
 	integer<BITS>& operator=(word n)
 	{
@@ -81,35 +86,13 @@ public:
 	word* operator &() { return buffer; }
 	//operator const word& () const { return buffer[0]; }
 
-	template<size_t PBITS>
-	integer<BITS>& operator*=(integer<PBITS> n)
+	/*static integer<sizeof(unsigned long) * 8 * 2> operator*(unsigned long a, unsigned long b)
 	{
-		integer<BITS + PBITS> temp = 0;
+		integer<sizeof(unsigned long) * 8 * 2)> temp = 0;
+		return temp;
+	}*/
 
-		int i, j;
-		for (i = 0; i < size(); ++i)
-		{
-			if (read(i) != 0)
-			{
-				for (j = 0; j < n.size(); ++j)
-				{
-					if (n[j] != 0) {
-						//integer<sizeof(word) * 8 * 2> c = ((*this)[i]) * n[j] + temp[i + j];
-						integer<sizeof(word) * 8 * 2> c = (integer<sizeof(word) * 8>((*this)[i]) * integer<sizeof(word) * 8>(n[j]));
-						//c *= n[j];
-						c += temp[i + j];
-
-						temp[i + j] = c.low();
-						temp[i + j + 1] += c.high();
-					}
-				}
-			}
-		}
-		*this = temp;
-		return *this;
-	}
-
-	integer<BITS>& operator*=(unsigned long n)
+	integer<BITS + (sizeof(unsigned long) * 8)> operator*(unsigned long n)
 	{
 		integer<BITS + (sizeof(n) * 8)> temp = 0;
 
@@ -125,8 +108,45 @@ public:
 				temp[i + 1] += c.high();
 			}
 		}
-		*this = temp;
-		return *this;
+		return temp;
+	}
+
+	integer<BITS + (sizeof(unsigned long) * 8)> operator*=(unsigned long n)
+	{
+		return *this = *this * n;
+	}
+
+	template<size_t PBITS>
+	integer<BITS+PBITS> operator*(const integer<PBITS> &b)
+	{
+		integer<BITS+PBITS> temp = 0;
+
+		int i, j;
+		for (i = 0; i < size(); ++i)
+		{
+			if (read(i) != 0)
+			{
+				for (j = 0; j < b.size(); ++j)
+				{
+					if (b[j] != 0) {
+						//integer<sizeof(word) * 8 * 2> c = ((*this)[i]) * n[j] + temp[i + j];
+						integer<sizeof(word) * 8 * 2> c = (*this)[i] * b[j];
+						//c *= n[j];
+						c += temp[i + j];
+
+						temp[i + j] = c.low();
+						temp[i + j + 1] += c.high();
+					}
+				}
+			}
+		}
+		return temp;
+	}
+
+	template<size_t PBITS>
+	integer<BITS>& operator*=(const integer<PBITS> &n)
+	{
+		return *this = *this * n;
 	}
 
 	/*template<size_t PBITS>
@@ -361,14 +381,14 @@ public:
 	integer<BITS / 2> low() const
 	{
 		integer<BITS / 2> temp;
-		memcpy(&temp, (byte*)buffer, size() / 2);
+		memcpy(&temp, (byte*)buffer, BITS / 8 / 2);
 		return temp;
 	}
 
 	integer<BITS / 2> high() const
 	{
 		integer<BITS / 2> temp;
-		memcpy(&temp, (byte*)buffer + (size() / 2), size() / 2);
+		memcpy(&temp, (byte*)buffer + (BITS / 8 / 2), BITS / 8 / 2);
 		return temp;
 	}
 
@@ -414,6 +434,9 @@ public:
 	uint64* operator& () { return &t; }
 	uint32 low() { return t; }
 	uint32 high() { return t / 0xFFFFFFFF; }
+	static unsigned long size() { return 1; }
+	const uint64& operator[](unsigned int i) const { return t; }
+	uint64& operator[](unsigned int i) { return t; }
 private:
 	uint64 t;
 };

@@ -75,7 +75,8 @@ int main(int argc, const char * argv[])
 	return 0;*/
 
 	std::chrono::milliseconds start = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
-	p = 3;
+	modulus = 0x8000000000000000;
+	p = 2;
 	unsigned long i;
 	for (i = 0; i < 1; i++)
 	{
