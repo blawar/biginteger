@@ -13,6 +13,7 @@ typedef unsigned char byte;
 typedef unsigned long long word;
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
+#define BIT_MASK(x) (((word)1 << x) - 1)
 
 template<size_t BITS>
 class integer
@@ -135,6 +136,21 @@ public:
 			}
 		}
 		return temp;
+	}
+
+	integer<BITS>& operator >> (unsigned long s)
+	{
+		word carry = 0;
+		for (long i = 0; i < size(); i++)
+		{
+			if (i)
+			{
+				carry = BIT_MASK(s) & (*this)[i];
+				(*this)[i] = (*this)[i] | (carry << (sizeof(word) * 8 - s));
+			}
+			(*this)[i] = (*this)[i] >> s;
+		}
+		return *this;
 	}
 
 	template<size_t PBITS>
@@ -297,15 +313,14 @@ public:
 		return *this;
 	}
 
-	integer<BITS>& pow(long exponent)
+	integer<BITS*2>& pow(long exponent) const
 	{
-		integer<BITS> temp = 1;
+		integer<BITS*2> temp = 1;
 		for (long i = 0; i < exponent; i++)
 		{
 			temp *= *this;
 		}
-		*this = temp;
-		return *this;
+		return temp;
 	}
 
 	word& operator[](unsigned long i)
@@ -328,7 +343,7 @@ public:
 		buffer[i] = value;
 	}
 
-	void print()
+	void print() const
 	{
 		const char* fmt;
 		switch (sizeof(word))
@@ -386,6 +401,11 @@ public:
 		return temp;
 	}
 
+	bool bit(unsigned long i)
+	{
+		return (((byte*)buffer)[i / 8] >> (i % 8)) & 1;
+	}
+
 	static unsigned long size()
 	{
 		return BITS / 8 / sizeof(word);
@@ -428,9 +448,9 @@ public:
 	uint64* operator& () { return &t; }
 	uint32 low() { return t; }
 	uint32 high() { return t / 0xFFFFFFFF; }
-	static unsigned long size() { return 1; }
-	const uint64& operator[](unsigned int i) const { return t; }
-	uint64& operator[](unsigned int i) { return t; }
+	//static unsigned long size() { return 1; }
+	//const uint64& operator[](unsigned int i) const { return t; }
+	//uint64& operator[](unsigned int i) { return t; }
 private:
 	uint64 t;
 };

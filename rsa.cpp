@@ -67,20 +67,29 @@ int main(int argc, const char * argv[])
 	}
 	printf("i: %d\n", i);*/
 
-	/*integer<64> a = 10;
-	integer<64> b = 200;
-	integer<128> c = a * b;
-	c.print();
-	c *= 2;
+	integer<128> a = (word)0xABCDFFFF1234;
+	//integer<64> b = 200;
+	//integer<128> c = a * b;
+	a >> 32;
+	a.print();
+	//c *= 2;
+
+	/*p = BIT_MASK(64);
+	for (int i = 0; i <128; i++)
+	{
+		if (i % 16 == 0) printf("\n");
+		printf("%d ", p.bit(i)?1:0);
+	}
+	printf("\n");
 	return 0;*/
 
 	std::chrono::milliseconds start = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
-	modulus = 0x8000000000000000;
+	//modulus = 1;
 	p = 2;
 	unsigned long i;
-	for (i = 0; i < 1; i++)
+	for (i = 0; i < 0xFFFF; i++)
 	{
-		modulus *= p;
+		modulus * modulus;
 	}
 	std::chrono::milliseconds end = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
 	if ((end - start).count() == 0)
