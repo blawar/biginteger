@@ -67,11 +67,12 @@ int main(int argc, const char * argv[])
 	}
 	printf("i: %d\n", i);*/
 
-	//integer<128> a = (word)0xABCDFFFF1234;
+	integer<128> a = 1;
 	//integer<64> b = 200;
 	//integer<128> c = a * b;
-	//a >>= 32;
-	//a.print();
+	a << 128;
+	a.print();
+	return 0;
 	//c *= 2;
 
 	/*p = BIT_MASK(64);
