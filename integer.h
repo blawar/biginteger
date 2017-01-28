@@ -113,9 +113,9 @@ public:
 	}
 
 	template<size_t PBITS>
-	integer<BITS+PBITS> operator*(const integer<PBITS> &b)
+	integer<BITS + PBITS> operator*(const integer<PBITS>& b) const
 	{
-		integer<BITS+PBITS> temp = 0;
+		integer<BITS + PBITS> temp = 0;
 
 		int i, j;
 		for (i = 0; i < size(); ++i)
@@ -194,7 +194,7 @@ public:
 				if (i != size() - 1)
 				{
 					carry = ~BIT_MASK(sizeof(word) * 8 - s) & (*this)[i];
-					(*this)[i+1] = (*this)[i+1] | carry;
+					(*this)[i + 1] = (*this)[i + 1] | carry;
 				}
 				if (s == sizeof(word) * 8)
 				{
@@ -240,7 +240,7 @@ public:
 		return product;
 	}
 
-	template <size_t PBITS>
+	/*template <size_t PBITS>
 	integer<BITS> divide(const integer<PBITS> &b, integer<BITS> &modulus) const
 	{
 		integer<BITS> tmp = 0;
@@ -261,13 +261,83 @@ public:
 		}
 
 		return c;
+	}*/
+
+	template <size_t PBITS>
+	integer<BITS> divide(const integer<PBITS> &divisor, integer<BITS> &remainderainder) const
+	{
+		integer<BITS> tmp = 0;
+		integer<BITS> c = 0;
+		integer<BITS> z = 0;
+
+		for (long i = size() - 1; i >= 0; i--)
+		{
+			remainderainder <<= sizeof(word) * 8;
+
+			remainderainder[0] = (*this)[i];
+			c[i] = 0;
+
+			z = read(size() - i - 1)
+
+				while (remainderainder > divisor)
+				{
+					integer<BITS> t =
+						c[i]++;
+					remainderainder -= divisor;
+				}
+		}
+
+		return c;
+	}
+
+	template <size_t PBITS>
+	integer<BITS> divideAndConquer(const integer<PBITS>& divisor, integer<BITS>& remainder) const
+	{
+		const integer<BITS>& dividend = *this;
+		integer<BITS> quotient;
+
+		if (*this < divisor)
+		{
+			quotient = 0;
+			remainder = dividend;
+			return quotient;
+		}
+
+		if (*this == divisor)
+		{
+			quotient = 1;
+			remainder = 0;
+			return quotient;
+		}
+
+		integer<BITS> min = 0, max = dividend;
+
+		while (true)
+		{
+			integer<BITS> number = (max + min) >> 1;
+
+			integer<BITS>  posRem = dividend - (divisor * number);
+			if (posRem < 0)
+				max = number - 1;
+			else if (!(posRem < divisor))
+			{
+				min = number + 1;
+			}
+			else
+			{
+				quotient = number;
+				remainder = posRem;
+				break;
+			}
+		}
+		return quotient;
 	}
 
 	template <size_t PBITS>
 	integer<BITS> operator/(const integer<PBITS> &b) const
 	{
 		integer<BITS> modulus;
-		return divide(b, modulus);
+		return divideAndConquer(b, modulus);
 	}
 
 	template <size_t PBITS>
@@ -281,7 +351,7 @@ public:
 	integer<BITS> operator%(const integer<PBITS> &b) const
 	{
 		integer<BITS> modulus;
-		divide(b, modulus);
+		divideAndConquer(b, modulus);
 		return modulus;
 	}
 
@@ -293,31 +363,52 @@ public:
 	}
 
 	template<size_t PBITS>
-	bool operator==(integer<BITS> n)
+	bool operator==(const integer<PBITS>& n) const
 	{
-		integer<BITS> temp = 0;
-		for (integer<BITS> i = 0; i < n; i++)
+		word i, len = MIN(size(), n.size());
+		for (word i = 0; i < len; i++)
 		{
 			if (read(i) != n.read(i))
 			{
 				return false;
 			}
 		}
+		if (size() < n.size())
+		{
+			for (; i < n.size(); i++)
+			{
+				if (n.read(i))
+				{
+					return false;
+				}
+			}
+		}
+
+		if (size() > n.size())
+		{
+			for (; i < size(); i++)
+			{
+				if (read(i))
+				{
+					return false;
+				}
+			}
+		}
 		return true;
 	}
 
 	template<size_t PBITS>
-	bool operator!=(integer<PBITS> n)
+	bool operator!=(const integer<PBITS>& n) const
 	{
 		return !(*this == n);
 	}
 
 	template<size_t PBITS>
-	bool operator<(integer<PBITS> n) const
+	bool operator<(const integer<PBITS>& n) const
 	{
 		unsigned long sz = size();
 		unsigned long i = 0;
-		while(i < sz)
+		while (i < sz)
 		{
 			word a = read(i);
 			word b = n.read(i);
@@ -342,7 +433,7 @@ public:
 	}
 
 	template<size_t PBITS>
-	bool operator>(integer<PBITS> n) const
+	bool operator>(const integer<PBITS>& n) const
 	{
 		return n < *this;
 	}
@@ -396,7 +487,9 @@ public:
 		word num = 0;
 		int borrow = 0;
 		long len = MIN(size(), n.size());
-		for (long i = 0; i < len; i++)
+		long i;
+
+		for (i = 0; i < len; i++)
 		{
 			word a = read(i);
 			word b = n.read(i);
@@ -415,6 +508,49 @@ public:
 			write(i, num);
 		}
 
+		if (size() < n.size())
+		{
+			for (; i < n.size(); i++)
+			{
+				word a = 0;
+				word b = n.read(i);
+				num = a - b - borrow;
+
+				if (num > a)
+				{
+					borrow = 1;
+					num += std::numeric_limits<word>::max() + 1;
+				}
+				else
+				{
+					borrow = 0;
+				}
+
+				write(i, num);
+			}
+		}
+		else if (size() > n.size())
+		{
+			for (; i < size(); i++)
+			{
+				word a = read(i);
+				word b = 0;
+				num = a - b - borrow;
+
+				if (num > a)
+				{
+					borrow = 1;
+					num += std::numeric_limits<word>::max() + 1;
+				}
+				else
+				{
+					borrow = 0;
+				}
+
+				write(i, num);
+			}
+		}
+
 		return *this;
 	}
 
@@ -423,7 +559,7 @@ public:
 		word num = 0;
 		int carry = 0;
 		long len = size();
-		for(long i=0; i < len; i++)
+		for (long i = 0; i < len; i++)
 		{
 			word a = read(i);
 			num = a + 1 + carry;
@@ -467,9 +603,9 @@ public:
 		return *this;
 	}
 
-	integer<BITS*2>& pow(long exponent) const
+	integer<BITS * 2>& pow(long exponent) const
 	{
-		integer<BITS*2> temp = 1;
+		integer<BITS * 2> temp = 1;
 		for (long i = 0; i < exponent; i++)
 		{
 			temp *= *this;
@@ -531,7 +667,7 @@ public:
 		{
 			if (i % 8 == 0 && i != 0)
 				printf("\n");
-			
+
 			for (int j = 0; j < sizeof(word); j++)
 			{
 				printf("%2.2x", ((byte*)&buffer[size() - i - 1])[sizeof(word) - j - 1]);
@@ -564,7 +700,7 @@ public:
 	{
 		return BITS / 8 / sizeof(word);
 	}
-//private:
+	//private:
 	word buffer[BITS / 8 / sizeof(word)];
 };
 
