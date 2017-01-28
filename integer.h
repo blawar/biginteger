@@ -221,13 +221,55 @@ public:
 		return *this = *this * n;
 	}
 
+	template <size_t PBITS>
+	integer<PBITS> powmod(long exp, const integer<PBITS> modulus)
+	{
+		*this %= modulus;
+		integer<PBITS> result = 1;
+		while (exp != 0)
+		{
+			if (exp & 1)
+			{
+				result = (result * *this) % modulus;
+			}
+			*this = (*this * *this) % modulus;
+			exp >>= 1;
+		}
+		return result;
+	}
+
+	template <size_t PBITS>
+	integer<BITS> operator/(const integer<PBITS> &b)
+	{
+		integer<BITS> row = 0;
+		integer<BITS> tmp = 0;
+		integer<BITS> c = 0;
+		long i, j;
+
+		for (i = size() - 1; i >= 0; i--)
+		{
+			row <<= sizeof(word) * 8;
+
+			row[0] = (*this)[i];
+			c[i] = 0;
+
+			while (row > b)
+			{
+				c[i]++;
+				row -= b;
+			}
+		}
+
+		return c;
+	}
+
 	/*template<size_t PBITS>
 	operator/(const integer<PBITS> &b) {
 		int i, l1 = (len - 1)*Blen, l2 = (b.len - 1)*Blen;
 		int64 x = data[len], y = b[b.len];
 		while (x)x /= 10, l1++;
 		while (y)y /= 10, l2++;
-		bignum tmp, chu, B;
+		integer<PBITS> tmp, chu, B;
 		chu = *this; B = b;
 
 		for (i = 1; i*Blen <= l1 - l2; ++i)B *= base;
@@ -264,7 +306,7 @@ public:
 	}
 
 	template<size_t PBITS>
-	bool operator<(integer<PBITS> n)
+	bool operator<(integer<PBITS> n) const
 	{
 		unsigned long sz = size();
 		unsigned long i = 0;
@@ -292,15 +334,21 @@ public:
 		return false;
 	}
 
-	integer<BITS> operator+(integer<BITS> n)
+	template<size_t PBITS>
+	bool operator>(integer<PBITS> n) const
 	{
-		integer<BITS> temp(n);
+		return n < *this;
+	}
+
+	integer<BITS> operator+(integer<BITS> n) const
+	{
+		integer<BITS> temp = *this;
 		temp += n;
 
 		return temp;
 	}
 
-	integer<BITS> operator+=(integer<BITS> n)
+	integer<BITS>& operator+=(integer<BITS> n)
 	{
 		word num = 0;
 		int carry = 0;
@@ -318,6 +366,41 @@ public:
 			else
 			{
 				carry = 0;
+			}
+
+			write(i, num);
+		}
+
+		return *this;
+	}
+
+	integer<BITS> operator-(integer<BITS> n) const
+	{
+		integer<BITS> temp = *this;
+		temp -= n;
+
+		return temp;
+	}
+
+	integer<BITS>& operator-=(integer<BITS> n)
+	{
+		word num = 0;
+		int borrow = 0;
+		long len = size();
+		for (long i = 0; i < len; i++)
+		{
+			word a = read(i);
+			word b = n.read(i);
+			num = a - b - borrow;
+
+			if (num > a)
+			{
+				borrow = 1;
+				num += std::numeric_limits<word>::max() + 1;
+			}
+			else
+			{
+				borrow = 0;
 			}
 
 			write(i, num);

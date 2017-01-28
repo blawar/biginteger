@@ -67,10 +67,12 @@ int main(int argc, const char * argv[])
 	}
 	printf("i: %d\n", i);*/
 
-	integer<128> a = 1;
+	integer<128> a = integer<128>(0xFFFF) / integer<128>(10);
+	//a <<= 64;
+	//a -= 1;
 	//integer<64> b = 200;
 	//integer<128> c = a * b;
-	a << 128;
+	//a -= 2;
 	a.print();
 	return 0;
 	//c *= 2;
