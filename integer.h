@@ -230,7 +230,8 @@ public:
 		{
 			if (exp & 1)
 			{
-				result = (result * *this) % modulus;
+				result = (result * *this);
+				result %= modulus;
 			}
 			*this = (*this * *this) % modulus;
 			exp >>= 1;
@@ -239,51 +240,56 @@ public:
 	}
 
 	template <size_t PBITS>
-	integer<BITS> operator/(const integer<PBITS> &b)
+	integer<BITS> divide(const integer<PBITS> &b, integer<BITS> &modulus) const
 	{
-		integer<BITS> row = 0;
 		integer<BITS> tmp = 0;
 		integer<BITS> c = 0;
-		long i, j;
 
-		for (i = size() - 1; i >= 0; i--)
+		for (long i = size() - 1; i >= 0; i--)
 		{
-			row <<= sizeof(word) * 8;
+			modulus <<= sizeof(word) * 8;
 
-			row[0] = (*this)[i];
+			modulus[0] = (*this)[i];
 			c[i] = 0;
 
-			while (row > b)
+			while (modulus > b)
 			{
 				c[i]++;
-				row -= b;
+				modulus -= b;
 			}
 		}
 
 		return c;
 	}
 
-	/*template<size_t PBITS>
-	operator/(const integer<PBITS> &b) {
-		int i, l1 = (len - 1)*Blen, l2 = (b.len - 1)*Blen;
-		int64 x = data[len], y = b[b.len];
-		while (x)x /= 10, l1++;
-		while (y)y /= 10, l2++;
-		integer<PBITS> tmp, chu, B;
-		chu = *this; B = b;
+	template <size_t PBITS>
+	integer<BITS> operator/(const integer<PBITS> &b) const
+	{
+		integer<BITS> modulus;
+		return divide(b, modulus);
+	}
 
-		for (i = 1; i*Blen <= l1 - l2; ++i)B *= base;
-		for (i = 1; i <= (l1 - l2) % Blen; ++i)B *= 10;
-		for (i = l1 - l2; i >= 0; --i) {
-			x = 0;
-			while (chu >= B)chu -= B, x++;
-			tmp[i / Blen + 1] = tmp[i / Blen + 1] * 10 + x;
-			B /= 10;
-		}
-		tmp.len = (l1 - l2) / Blen + 1;
-		while (tmp.len >= 1 && !tmp[tmp.len])tmp.len--;
-		return tmp;
-	}*/
+	template <size_t PBITS>
+	integer<BITS> operator/=(const integer<PBITS> &b)
+	{
+		integer<BITS> temp = *this / b;
+		return *this = temp;
+	}
+
+	template <size_t PBITS>
+	integer<BITS> operator%(const integer<PBITS> &b) const
+	{
+		integer<BITS> modulus;
+		divide(b, modulus);
+		return modulus;
+	}
+
+	template <size_t PBITS>
+	integer<BITS> operator%=(const integer<PBITS> &b)
+	{
+		integer<BITS> temp = *this % b;
+		return *this = temp;
+	}
 
 	template<size_t PBITS>
 	bool operator==(integer<BITS> n)
@@ -340,7 +346,7 @@ public:
 		return n < *this;
 	}
 
-	integer<BITS> operator+(integer<BITS> n) const
+	integer<BITS> operator+(const integer<BITS> n) const
 	{
 		integer<BITS> temp = *this;
 		temp += n;
@@ -348,7 +354,7 @@ public:
 		return temp;
 	}
 
-	integer<BITS>& operator+=(integer<BITS> n)
+	integer<BITS>& operator+=(const integer<BITS> n)
 	{
 		word num = 0;
 		int carry = 0;
@@ -374,7 +380,7 @@ public:
 		return *this;
 	}
 
-	integer<BITS> operator-(integer<BITS> n) const
+	integer<BITS> operator-(const integer<BITS>& n) const
 	{
 		integer<BITS> temp = *this;
 		temp -= n;
@@ -382,7 +388,7 @@ public:
 		return temp;
 	}
 
-	integer<BITS>& operator-=(integer<BITS> n)
+	integer<BITS>& operator-=(const integer<BITS>& n)
 	{
 		word num = 0;
 		int borrow = 0;
