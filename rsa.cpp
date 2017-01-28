@@ -67,9 +67,10 @@ int main(int argc, const char * argv[])
 	}
 	printf("i: %d\n", i);*/
 
-	integer<128> a = integer<128>(2);
+	integer<128> a;
+	integer<128> c = integer<128>(2);
 	integer<128> m = 33;
-	a.powmod(7, m);
+	a = c.powmod(7, m);
 	//a <<= 64;
 	//a -= 1;
 	//integer<64> b = 200;

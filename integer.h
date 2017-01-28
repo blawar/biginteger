@@ -13,6 +13,7 @@ typedef unsigned char byte;
 typedef unsigned long long word;
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
 #define BIT_MASK(x) (((word)1 << x) - 1)
 
 template<size_t BITS>
@@ -224,19 +225,19 @@ public:
 	template <size_t PBITS>
 	integer<PBITS> powmod(long exp, const integer<PBITS> modulus)
 	{
-		*this %= modulus;
-		integer<PBITS> result = 1;
+		integer<PBITS> product = 1;
+		integer<BITS> sequence = *this % modulus;
+
 		while (exp != 0)
 		{
 			if (exp & 1)
 			{
-				result = (result * *this);
-				result %= modulus;
+				product = (product * sequence) % modulus;
 			}
-			*this = (*this * *this) % modulus;
+			sequence = (sequence * sequence) % modulus;
 			exp >>= 1;
 		}
-		return result;
+		return product;
 	}
 
 	template <size_t PBITS>
@@ -380,7 +381,8 @@ public:
 		return *this;
 	}
 
-	integer<BITS> operator-(const integer<BITS>& n) const
+	template<size_t PBITS>
+	integer<BITS> operator-(const integer<PBITS>& n) const
 	{
 		integer<BITS> temp = *this;
 		temp -= n;
@@ -388,11 +390,12 @@ public:
 		return temp;
 	}
 
-	integer<BITS>& operator-=(const integer<BITS>& n)
+	template<size_t PBITS>
+	integer<BITS>& operator-=(const integer<PBITS>& n)
 	{
 		word num = 0;
 		int borrow = 0;
-		long len = size();
+		long len = MIN(size(), n.size());
 		for (long i = 0; i < len; i++)
 		{
 			word a = read(i);
