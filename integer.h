@@ -653,3 +653,9 @@ public:
 private:
 	uint8 t;
 };
+
+template <size_t BITS, size_t PBITS>
+integer<PBITS> powmod(integer<BITS>& b, long exp, const integer<PBITS>& modulus)
+{
+	return b.powmod(exp, modulus);
+}
