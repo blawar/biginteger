@@ -372,7 +372,7 @@ public:
 	bool operator==(const integer<PBITS>& n) const
 	{
 		word i, len = MIN(size(), n.size());
-		for (word i = 0; i < len; i++)
+		for (i = 0; i < len; i++)
 		{
 			if (read(i) != n.read(i))
 			{
