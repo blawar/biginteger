@@ -159,7 +159,7 @@ public:
 				if (i)
 				{
 					carry = BIT_MASK(s) & (*this)[i];
-					(*this)[i] = (*this)[i] | (carry << (sizeof(word) * 8 - s));
+					(*this)[i - 1] = (*this)[i - 1] | (carry << (sizeof(word) * 8 - s));
 				}
 				(*this)[i] = (*this)[i] >> s;
 			}
@@ -296,7 +296,7 @@ public:
 		const integer<BITS>& dividend = *this;
 		integer<BITS> quotient;
 
-		if (*this < divisor)
+		if (dividend < divisor)
 		{
 			quotient = 0;
 			remainder = dividend;
@@ -314,18 +314,21 @@ public:
 
 		while (true)
 		{
-			integer<BITS> number = (max + min) >> 1;
+			integer<BITS> mid = (max + min) >> 1;
+			integer<BITS*2> p = (divisor * mid);
 
-			integer<BITS>  posRem = dividend - (divisor * number);
-			if (posRem < 0)
-				max = number - 1;
-			else if (!(posRem < divisor))
+			integer<BITS>  posRem = dividend - p;
+			if (p > dividend)
 			{
-				min = number + 1;
+				max = mid - integer<BITS>(1);
+			}
+			else if (posRem >= divisor)
+			{
+				min = mid + integer<BITS>(1);
 			}
 			else
 			{
-				quotient = number;
+				quotient = mid;
 				remainder = posRem;
 				break;
 			}
@@ -406,9 +409,7 @@ public:
 	template<size_t PBITS>
 	bool operator<(const integer<PBITS>& n) const
 	{
-		unsigned long sz = size();
-		unsigned long i = 0;
-		while (i < sz)
+		for(long i = size() - 1; i >= 0; i--)
 		{
 			word a = read(i);
 			word b = n.read(i);
@@ -427,7 +428,6 @@ public:
 			{
 				return false;
 			}
-			i++;
 		}
 		return false;
 	}
@@ -436,6 +436,18 @@ public:
 	bool operator>(const integer<PBITS>& n) const
 	{
 		return n < *this;
+	}
+
+	template<size_t PBITS>
+	bool operator>=(const integer<PBITS>& n) const
+	{
+		return !(*this < n);
+	}
+
+	template<size_t PBITS>
+	bool operator<=(const integer<PBITS>& n) const
+	{
+		return !(*this > n);
 	}
 
 	integer<BITS> operator+(const integer<BITS> n) const
@@ -526,7 +538,7 @@ public:
 					borrow = 0;
 				}
 
-				write(i, num);
+				//write(i, num);
 			}
 		}
 		else if (size() > n.size())

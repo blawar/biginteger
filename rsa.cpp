@@ -68,7 +68,12 @@ int main(int argc, const char * argv[])
 	printf("i: %d\n", i);*/
 
 	integer<128> c = modulus;
-	integer<128> a = c.powmod(0x1, integer<128>(0x12345678));
+	integer<128> a = 0x91a;// c.powmod(0x1, integer<128>(0x12345678));
+	a <<= 64;
+	a -= integer<128>(1);
+	a += 0;
+	a >>= 1;
+	//a /= integer<128>((word)0xFFFFFFFF);
 	//integer<128> c = integer<128>(2);
 	//integer<128> m = 33;
 	//a = c.powmod(7, m);
