@@ -82,7 +82,7 @@ int main(int argc, const char * argv[])
 	printf("i: %d\n", i);*/
 
 	integer<128> c = 42;
-	integer<128> a = 217;
+	integer<128> a = 2017;
 	//a <<= 64;
 	//a -= integer<128>(1);
 	//a += 0;
@@ -108,9 +108,9 @@ int main(int argc, const char * argv[])
 	}
 	printf("\n");
 	return 0;*/
-
-	printf("%d\n", c.modularInverse(a));
+	//printf("%u\n", c.modularInverse(a));
 	printf("%d\n", mul_inv(42, 2017));
+	c.modularInverse(a).print();
 	return 0;
 
 	std::chrono::milliseconds start = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());

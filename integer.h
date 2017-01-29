@@ -413,6 +413,7 @@ public:
 		integer<BITS>& a = *this;
 		integer<BITS> b0 = b, t, q;
 		integer<BITS> x0 = 0, x1 = 1;
+		bool sign = false;
 
 		if (b == integer<BITS>(1))
 		{
@@ -427,11 +428,17 @@ public:
 			a = t;
 
 			t = x0;
-			x0 = x1 - q * x0;
+
+			integer<BITS*2> t2 = q * x0;
+			x0 = x1 - t2;
+			if (t2 > x1)
+			{
+				sign = true;
+			}
 			x1 = t;
 		}
 
-		if (x1 < 0)
+		if (sign)
 		{
 			x1 += b0;
 		}
