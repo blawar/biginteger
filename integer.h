@@ -264,31 +264,28 @@ public:
 	}*/
 
 	template <size_t PBITS>
-	integer<BITS> divide(const integer<PBITS> &divisor, integer<BITS> &remainderainder) const
+	integer<BITS> divide(const integer<PBITS> &divisor, integer<BITS>& remainder) const
 	{
 		integer<BITS> tmp = 0;
 		integer<BITS> c = 0;
-		integer<BITS> z = 0;
 
 		for (long i = size() - 1; i >= 0; i--)
 		{
-			remainderainder <<= sizeof(word) * 8;
+			remainder <<= sizeof(word) * 8;
 
-			remainderainder[0] = (*this)[i];
+			remainder[0] = (*this)[i];
 			c[i] = 0;
 
-			z = read(size() - i - 1)
-
-				while (remainderainder > divisor)
-				{
-					integer<BITS> t =
-						c[i]++;
-					remainderainder -= divisor;
-				}
+			while (remainder > divisor)
+			{
+				c[i]++;
+				remainder -= divisor;
+			}
 		}
 
 		return c;
 	}
+
 
 	template <size_t PBITS>
 	integer<BITS> divideAndConquer(const integer<PBITS>& divisor, integer<BITS>& remainder) const
@@ -310,12 +307,20 @@ public:
 			return quotient;
 		}
 
+		if (divisor == integer<PBITS>(0))
+		{
+			// should throw exception here
+			quotient = 0;
+			remainder = 0;
+			return quotient;
+		}
+
 		integer<BITS> min = 0, max = dividend;
 
 		while (true)
 		{
 			integer<BITS> mid = (max + min) >> 1;
-			integer<BITS*2> p = (divisor * mid);
+			integer<BITS * 2> p = (divisor * mid);
 
 			if (p > dividend)
 			{
@@ -403,6 +408,36 @@ public:
 		return true;
 	}
 
+	integer<BITS> modularInverse(integer<BITS> b)
+	{
+		integer<BITS>& a = *this;
+		integer<BITS> b0 = b, t, q;
+		integer<BITS> x0 = 0, x1 = 1;
+
+		if (b == integer<BITS>(1))
+		{
+			return integer<BITS>(1);
+		}
+
+		while (a > integer<BITS>(1))
+		{
+			q = a / b;
+			t = b;
+			b = a % b;
+			a = t;
+
+			t = x0;
+			x0 = x1 - q * x0;
+			x1 = t;
+		}
+
+		if (x1 < 0)
+		{
+			x1 += b0;
+		}
+		return x1;
+	}
+
 	template<size_t PBITS>
 	bool operator!=(const integer<PBITS>& n) const
 	{
@@ -412,7 +447,7 @@ public:
 	template<size_t PBITS>
 	bool operator<(const integer<PBITS>& n) const
 	{
-		for(long i = size() - 1; i >= 0; i--)
+		for (long i = size() - 1; i >= 0; i--)
 		{
 			word a = read(i);
 			word b = n.read(i);
