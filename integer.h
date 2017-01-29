@@ -317,20 +317,23 @@ public:
 			integer<BITS> mid = (max + min) >> 1;
 			integer<BITS*2> p = (divisor * mid);
 
-			integer<BITS>  posRem = dividend - p;
 			if (p > dividend)
 			{
 				max = mid - integer<BITS>(1);
 			}
-			else if (posRem >= divisor)
-			{
-				min = mid + integer<BITS>(1);
-			}
 			else
 			{
-				quotient = mid;
-				remainder = posRem;
-				break;
+				integer<BITS>  posRem = dividend - p;
+				if (posRem >= divisor)
+				{
+					min = mid + integer<BITS>(1);
+				}
+				else
+				{
+					quotient = mid;
+					remainder = posRem;
+					break;
+				}
 			}
 		}
 		return quotient;
@@ -416,7 +419,6 @@ public:
 
 			if (a == b)
 			{
-				i++;
 				continue;
 			}
 
