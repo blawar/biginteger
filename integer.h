@@ -16,6 +16,27 @@ typedef unsigned long long word;
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #define BIT_MASK(x) (((word)1 << x) - 1)
 
+template <word x>
+struct ilog2 {
+	enum { value = (1 + ilog2<x / 2>::value) };
+};
+
+template <>
+struct ilog2<1> {
+	enum { value = 0 };
+};
+
+template<class T>
+inline constexpr T pow(const T base, unsigned const exponent)
+{
+	return (exponent == 0) ? 1 : (base * pow(base, exponent - 1));
+}
+
+template < typename T, T base, unsigned exponent >
+using pow_ = std::integral_constant < T, pow(base, exponent) >;
+
+#define POW(BASE, EXPONENT) (pow_ < decltype(BASE), BASE, EXPONENT > :: value)
+
 template<size_t BITS>
 class integer
 {
@@ -50,13 +71,13 @@ public:
 	}
 
 	template<size_t PBITS>
-	integer<BITS>(integer<PBITS>& n)
+	integer<BITS>(const integer<PBITS>& n)
 	{
 		*this = n;
 	}
 
 	template<size_t PBITS>
-	integer<BITS>& operator=(integer<PBITS>& n)
+	integer<BITS>& operator=(const integer<PBITS>& n)
 	{
 		memset(buffer, 0, size() * sizeof(word));
 		memcpy(buffer, (const word*)n, MIN(size() * sizeof(word), n.size() * sizeof(word)));
@@ -84,7 +105,9 @@ public:
 		return *this;
 	}
 
+	operator const word*() const { return buffer; }
 	operator word*() { return buffer; }
+	const word* operator &() const { return buffer; }
 	word* operator &() { return buffer; }
 	//operator const word& () const { return buffer[0]; }
 
@@ -660,14 +683,34 @@ public:
 	}
 
 	template<size_t exponent>
+	integer<BITS * exponent>& pow(integer<BITS * exponent>& result) const
+	{
+		result = 1;
+		integer<BITS * POW(2, ilog2<exponent>::value)> temp = *this;
+		long exp = exponent;
+
+		while (exp > 0)
+		{
+			if (exp % 2 == 1)
+			{
+				result *= temp;
+			}
+
+			exp >>= 1;
+
+			if (exp != 0)
+			{
+				temp *= temp;
+			}
+		}
+		return result;
+	}
+
+	template<size_t exponent>
 	integer<BITS * exponent> pow() const
 	{
-		integer<BITS * exponent> temp = 1;
-		for (long i = 0; i < exponent; i++)
-		{
-			temp *= *this;
-		}
-		return temp;
+		integer<BITS * exponent> result;
+		return pow<exponent>(result);
 	}
 
 	integer<BITS * 2>& pow(long exponent) const

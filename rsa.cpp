@@ -108,7 +108,13 @@ int main(int argc, const char * argv[])
 	}
 	printf("\n");
 	return 0;*/
-	modulus.pow<0x60>().print();
+	//printf("log: %d\n", ilog2<0xFFFFFF>::value);
+	
+	auto t = new integer<2048 * 0x100>();
+	printf("sizeof(t) = %d\n", sizeof(*t));
+	modulus.pow<0x1000>(*t).print();
+	delete t;
+
 	//printf("%u\n", c.modularInverse(a));
 	//printf("%d\n", mul_inv(42, 2017));
 	//modulus.modularInverse(integer<2048>(0xFFFF)).print();
