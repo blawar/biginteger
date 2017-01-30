@@ -659,6 +659,17 @@ public:
 		return *this;
 	}
 
+	template<size_t exponent>
+	integer<BITS * exponent> pow() const
+	{
+		integer<BITS * exponent> temp = 1;
+		for (long i = 0; i < exponent; i++)
+		{
+			temp *= *this;
+		}
+		return temp;
+	}
+
 	integer<BITS * 2>& pow(long exponent) const
 	{
 		integer<BITS * 2> temp = 1;

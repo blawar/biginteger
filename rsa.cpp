@@ -108,9 +108,10 @@ int main(int argc, const char * argv[])
 	}
 	printf("\n");
 	return 0;*/
+	modulus.pow<0x60>().print();
 	//printf("%u\n", c.modularInverse(a));
-	printf("%d\n", mul_inv(42, 2017));
-	c.modularInverse(a).print();
+	//printf("%d\n", mul_inv(42, 2017));
+	//modulus.modularInverse(integer<2048>(0xFFFF)).print();
 	return 0;
 
 	std::chrono::milliseconds start = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
