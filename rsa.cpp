@@ -93,7 +93,8 @@ int main(int argc, const char * argv[])
 	//auto d = (integer<128>((word)0xabcdef0017569217) *  integer<128>((word)0x7a88500ae544c291));
 	//d.print();
 
-	powmod(integer<128>((word)0x12345678aabbccdd), 0x100, integer<128>(0xabcdef0017569217)).print();
+	//powmod(integer<128>((word)0x12345678aabbccdd), 0x100, integer<128>(0xabcdef0017569217)).print();
+	powmod(_sample, 0x1, modulus).print();
 	return 0;
 	//a <<= 64;
 	//a -= 1;

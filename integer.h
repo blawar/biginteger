@@ -166,6 +166,17 @@ public:
 	integer<BITS>& operator >>= (unsigned long shift)
 	{
 		word carry, s;
+		if (shift >= sizeof(word) * 8)
+		{
+			unsigned long wordShift = shift / (sizeof(word) * 8);
+			shift %= sizeof(word) * 8;
+
+			for (long i = size() - 1; i >= wordShift; i--)
+			{
+				(*this)[i - wordShift] = (*this)[i];
+			}
+		}
+
 		while (shift > 0)
 		{
 			if (shift > sizeof(word) * 8)
@@ -340,20 +351,43 @@ public:
 		}
 
 		integer<BITS> min = 0, max = dividend;
-
+		unsigned long c = 0;
 		while (true)
 		{
+			if (c++ == 0x87d)
+			{
+				int y = 0;
+			}
 			integer<BITS> mid = (max + min) >> 1;
 			integer<BITS + PBITS> p = (divisor * mid);
 			integer<BITS>  posRem = dividend - p;
 
+			if (min >= integer<2048>("\xa9\xaa\xf4\xb5\x40\x55\x2a\xed\x22\xae\x23\x48\x3f\x28\x69\xa7\x7c\x41\x97\x42\x98\x70\x2c\xe5\x17\x78\x9c\xe8\x7b\xfd\x98\x0d\xc6\xd8\x95\xb6\x94\xc8\x36\x83\xd8\xe1\x87\x4b\x56\x7d\xd9\x40\x9b\xbf\x8b\x34\x68\x75\xee\x10\xf4\x3f\x69\x75\x90\x07\x3a\xce\xe9\x6b\xc3\xc2\x2e\x33\x82\x35\xe7\x63\x3d\xba\x54\x91\x15\x91\x74\x1e\x85\xe2\xea\x65\x28\x84\x50\xc4\xb3\x13\xa9\xdf\x6e\xee\x99\xd5\x1c\xba\xc4\x48\x3c\x39\x11\x18\x7d\x91\x25\x85\x6d\x8a\x2a\x0f\xe5\x96\x28\xea\x9b\xd9\xa7\x0a\xa6\x81\x43\xb5\xa2\xc1\x35\x3e\x76\xfa\x33\xa2\x5a\x3c\x32\x67\x77\x3e\x57\xc7\xa3\x94\xa2\x3c\x63\x70\xde\x15\x8a\x32\x36\x1a\x39\x92\x41\x5f\x36\x26\xdd\xda\x88\x49\x6e\xe2\x06\x0e\xcc\x1f\xc4\xde\xda\x1e\xd3\xdf\x66\x35\xef\x07\xd7\x67\x24\x9a\xb8\x5c\x6f\xf9\x22\x79\xff\xee\xa8\x48\x74\x29\x69\x47\xfc\xab\x68\x51\x0b\x2b\xf7\x01\xd2\x19\x66\xb8\x77\x3f\x08\x26\xde\x3a\x27\xa5\x72\x6b\x42\x4a\xcf\xec\x5b\x9a\xa4\xb5\x3c\x86\x1c\xd0\x12\xaf\xc6\x97\x86\x03\xc4\x5d\x71\x7c\xac\xad\x1e\xee\x05\x47\x16\xb0\xfd\xeb\x96\xbe\x60\x01"))
+			{
+				int x = 0;
+			}
+
 			if (p > dividend)
 			{
-				max = mid;// -integer<BITS>(1);
+				if (mid == max)
+				{
+					max -= integer<BITS>(1);
+				}
+				else
+				{
+					max = mid;
+				}
 			}
 			else if (posRem >= divisor)
 			{
-				min = mid + integer<BITS>(1);
+				if (mid == min)
+				{
+					min += integer<BITS>(1);
+				}
+				else
+				{
+					min = mid;
+				}
 			}
 			else
 			{
@@ -809,15 +843,21 @@ public:
 
 	integer<BITS / 2> low() const
 	{
-		integer<BITS / 2> temp;
-		memcpy(&temp, (byte*)buffer, BITS / 8 / 2);
+		integer<BITS / 2> temp = *this;
+		//memcpy(&temp, (byte*)buffer, BITS / 8 / 2);
 		return temp;
 	}
 
 	integer<BITS / 2> high() const
 	{
-		integer<BITS / 2> temp;
+		/*integer<BITS / 2> temp;// = *this >> (BITS / 2);
 		memcpy(&temp, (byte*)buffer + (BITS / 8 / 2), BITS / 8 / 2);
+		return temp;*/
+		if (BITS / 2 == 64)
+		{
+			int t = 0;
+		}
+		integer<BITS / 2> temp = (*this >> (BITS / 2));
 		return temp;
 	}
 
@@ -840,6 +880,8 @@ class integer<64>
 {
 public:
 	constexpr integer() : t() { }
+	template <size_t PBITS>
+	constexpr integer(const integer<PBITS>& t) : t(t[0]) { }
 	constexpr integer(const uint64&t) : t(t) {}
 	operator uint64& () { return t; }
 	constexpr operator const uint64& () const { return t; }
