@@ -143,11 +143,12 @@ public:
 		int i, j;
 		for (i = 0; i < size(); ++i)
 		{
-			if (read(i) != 0)
+			//if (read(i) != 0)
 			{
 				for (j = 0; j < b.size(); ++j)
 				{
-					if (b[j] != 0) {
+					//if (b[j] != 0)
+					{
 						//integer<sizeof(word) * 8 * 2> c = ((*this)[i]) * n[j] + temp[i + j];
 						integer<sizeof(word) * 8 * 2> c = integer<sizeof(word) * 8>((*this)[i]) * integer<sizeof(word) * 8>(b[j]);
 						//c *= n[j];
@@ -248,8 +249,8 @@ public:
 	template <size_t PBITS>
 	integer<PBITS> powmod(long exp, const integer<PBITS> modulus)
 	{
-		integer<PBITS> product = 1;
-		integer<BITS> sequence = *this % modulus;
+		integer<BITS> product = 1;
+		integer<PBITS> sequence = *this % modulus;
 
 		while (exp != 0)
 		{
@@ -323,7 +324,7 @@ public:
 			return quotient;
 		}
 
-		if (*this == divisor)
+		if (dividend == divisor)
 		{
 			quotient = 1;
 			remainder = 0;
@@ -343,26 +344,24 @@ public:
 		while (true)
 		{
 			integer<BITS> mid = (max + min) >> 1;
-			integer<BITS * 2> p = (divisor * mid);
+			integer<BITS + PBITS> p = (divisor * mid);
+			integer<BITS>  posRem = dividend - p;
 
 			if (p > dividend)
 			{
-				max = mid - integer<BITS>(1);
+				max = mid;// -integer<BITS>(1);
+			}
+			else if (posRem >= divisor)
+			{
+				min = mid + integer<BITS>(1);
 			}
 			else
 			{
-				integer<BITS>  posRem = dividend - p;
-				if (posRem >= divisor)
-				{
-					min = mid + integer<BITS>(1);
-				}
-				else
-				{
-					quotient = mid;
-					remainder = posRem;
-					break;
-				}
+				quotient = mid;
+				remainder = posRem;
+				break;
 			}
+
 		}
 		return quotient;
 	}
@@ -452,7 +451,7 @@ public:
 
 			t = x0;
 
-			integer<BITS*2> t2 = q * x0;
+			integer<BITS * 2> t2 = q * x0;
 			x0 = x1 - t2;
 			if (t2 > x1)
 			{
@@ -477,7 +476,28 @@ public:
 	template<size_t PBITS>
 	bool operator<(const integer<PBITS>& n) const
 	{
-		for (long i = size() - 1; i >= 0; i--)
+		long i;
+		if (n.size() > size())
+		{
+			for (i = n.size() - 1; i >= size(); i--)
+			{
+				if (n[i] != 0)
+				{
+					return true;
+				}
+			}
+		}
+		else
+		{
+			for (i = size() - 1; i >= n.size(); i--)
+			{
+				if ((*this)[i] != 0)
+				{
+					return false;
+				}
+			}
+		}
+		for (; i >= 0; i--)
 		{
 			word a = read(i);
 			word b = n.read(i);
@@ -835,7 +855,7 @@ public:
 		{
 			for (j = 0; j < 2; ++j)
 			{
-				uint64 c = (uint64)a[i] * b[j] + temp[i + j];
+				uint64 c = (uint64)a[i] * (uint64)b[j] + temp[i + j];
 
 				temp[i + j] = integer<64>(c).low();
 				temp[i + j + 1] += ((integer<64>*)&c)->high();
@@ -847,7 +867,7 @@ public:
 	const uint64* operator& () const { return &t; }
 	uint64* operator& () { return &t; }
 	uint32 low() { return t; }
-	uint32 high() { return t / 0xFFFFFFFF; }
+	uint32 high() { return t >> 32; }
 	//static unsigned long size() { return 1; }
 	//const uint64& operator[](unsigned int i) const { return t; }
 	//uint64& operator[](unsigned int i) { return t; }

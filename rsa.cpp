@@ -82,7 +82,7 @@ int main(int argc, const char * argv[])
 	printf("i: %d\n", i);*/
 
 	integer<128> c = 42;
-	integer<128> a = 2017;
+	integer<2048> a;
 	//a <<= 64;
 	//a -= integer<128>(1);
 	//a += 0;
@@ -90,7 +90,11 @@ int main(int argc, const char * argv[])
 	//a /= integer<128>(0x100);
 	//integer<128> c = integer<128>(2);
 	//integer<128> m = 33;
-	//a = powmod(_sample, 0x2, modulus);
+	//auto d = (integer<128>((word)0xabcdef0017569217) *  integer<128>((word)0x7a88500ae544c291));
+	//d.print();
+
+	powmod(integer<128>((word)0x12345678aabbccdd), 0x100, integer<128>(0xabcdef0017569217)).print();
+	return 0;
 	//a <<= 64;
 	//a -= 1;
 	//integer<64> b = 200;
@@ -110,10 +114,10 @@ int main(int argc, const char * argv[])
 	return 0;*/
 	//printf("log: %d\n", ilog2<0xFFFFFF>::value);
 	
-	auto t = new integer<2048 * 0x100>();
+	/*auto t = new integer<2048 * 0x100>();
 	printf("sizeof(t) = %d\n", sizeof(*t));
-	modulus.pow<0x1000>(*t).print();
-	delete t;
+	modulus.pow<0x100>(*t).print();
+	delete t;*/
 
 	//printf("%u\n", c.modularInverse(a));
 	//printf("%d\n", mul_inv(42, 2017));
