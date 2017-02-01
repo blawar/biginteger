@@ -171,9 +171,16 @@ public:
 			unsigned long wordShift = shift / (sizeof(word) * 8);
 			shift %= sizeof(word) * 8;
 
-			for (long i = size() - 1; i >= wordShift; i--)
+			long i;
+
+			for (i = 0; i < size() - wordShift; i++)
 			{
-				(*this)[i - wordShift] = (*this)[i];
+				(*this)[i] = (*this)[i + wordShift];
+			}
+
+			for (; i < size(); i++)
+			{
+				(*this)[i] = 0;
 			}
 		}
 
