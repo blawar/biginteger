@@ -435,7 +435,9 @@ public:
 		word i, len = MIN(size(), n.size());
 		for (i = 0; i < len; i++)
 		{
-			if (read(i) != n.read(i))
+			word a = read(i);
+			word b = n.read(i);
+			if (a != b)
 			{
 				return false;
 			}
@@ -850,15 +852,15 @@ public:
 
 	integer<BITS / 2> high() const
 	{
-		/*integer<BITS / 2> temp;// = *this >> (BITS / 2);
+		integer<BITS / 2> temp;
 		memcpy(&temp, (byte*)buffer + (BITS / 8 / 2), BITS / 8 / 2);
-		return temp;*/
-		if (BITS / 2 == 64)
+		return temp;
+		/*if (BITS / 2 == 64)
 		{
 			int t = 0;
 		}
 		integer<BITS / 2> temp = (*this >> (BITS / 2));
-		return temp;
+		return temp;*/
 	}
 
 	bool bit(unsigned long i)
