@@ -12,6 +12,7 @@ typedef unsigned char byte;
 
 typedef unsigned long long word;
 
+#define WORD_BITS (sizeof(word) * 8)
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #define BIT_MASK(x) (((word)1 << x) - 1)
@@ -111,7 +112,7 @@ public:
 	word* operator &() { return buffer; }
 	//operator const word& () const { return buffer[0]; }
 
-	integer<BITS + (sizeof(word) * 8)> operator*(word n)
+	integer<BITS + (WORD_BITS)> operator*(word n)
 	{
 		integer<BITS + (sizeof(n) * 8)> temp = 0;
 
@@ -120,7 +121,7 @@ public:
 		{
 			if (read(i) != 0)
 			{
-				integer<MIN(sizeof(word) * 8 * 2, BITS + (sizeof(n) * 8))> c = integer<sizeof(word) * 8>((*this)[i]) * integer<sizeof(word) * 8>(n);
+				integer<WORD_BITS * 2> c = integer<WORD_BITS>(read(i)) * integer<WORD_BITS>(n);
 				c += temp[i];
 
 				temp[i] = c.low();
@@ -130,7 +131,7 @@ public:
 		return temp;
 	}
 
-	integer<BITS + (sizeof(word) * 8)> operator*=(word n)
+	integer<BITS + (WORD_BITS)> operator*=(word n)
 	{
 		return *this = *this * n;
 	}
@@ -138,19 +139,29 @@ public:
 	template<size_t PBITS>
 	integer<BITS + PBITS> operator*(const integer<PBITS>& b) const
 	{
+		//return multiply(b);
 		integer<BITS + PBITS> temp = 0;
 
 		int i, j;
 		for (i = 0; i < size(); ++i)
 		{
-			//if (read(i) != 0)
+			if (read(i) != 0)
 			{
 				for (j = 0; j < b.size(); ++j)
 				{
-					//if (b[j] != 0)
+					if (b[j] != 0)
 					{
-						//integer<sizeof(word) * 8 * 2> c = ((*this)[i]) * n[j] + temp[i + j];
-						integer<sizeof(word) * 8 * 2> c = integer<sizeof(word) * 8>((*this)[i]) * integer<sizeof(word) * 8>(b[j]);
+						if (i + j == 6)
+						{
+							int axx = 0;
+						}
+
+						if (i + j + 1 == 6)
+						{
+							int axx = 0;
+						}
+						//integer<WORD_BITS * 2> c = ((*this)[i]) * n[j] + temp[i + j];
+						integer<WORD_BITS * 2> c = integer<WORD_BITS>((*this)[i]) * integer<WORD_BITS>(b[j]);
 						//c *= n[j];
 						c += temp[i + j];
 
@@ -163,13 +174,64 @@ public:
 		return temp;
 	}
 
+	template<size_t PBITS>
+	integer<BITS + PBITS> multiply(const integer<PBITS>& b) const
+	{
+		long i, j, k;
+		unsigned int i2;
+		const integer<BITS>& a = *this;
+		word temp;
+		bool carryIn, carryOut;
+
+		integer<BITS + PBITS> blk = 0;
+
+		for (i = 0; i < a.size(); i++)
+		{
+			for (i2 = 0; i2 < b.size(); i2++)
+			{
+				if ((a[i] & (1 << i2)) == 0)
+					continue;
+
+				for (j = 0, k = i, carryIn = false; j <= b.size(); j++, k++)
+				{
+					temp = blk[k] + getShiftedBlock(b, j, i2);
+					carryOut = (temp < blk[k]);
+
+					if (carryIn)
+					{
+						temp++;
+						carryOut |= (temp == 0);
+					}
+
+					blk[k] = temp;
+					carryIn = carryOut;
+				}
+
+				for (; carryIn; k++)
+				{
+					blk[k]++;
+					carryIn = (blk[k] == 0);
+				}
+			}
+		}
+		return blk;
+	}
+
+	template<size_t PBITS>
+	inline word getShiftedBlock(const integer<PBITS>& num, long x, unsigned int y) const
+	{
+		word part1 = (x == 0 || y == 0) ? 0 : (num[x - 1] >> (64 - y));
+		word part2 = (x == num.size()) ? 0 : (num[x] << y);
+		return part1 | part2;
+	}
+
 	integer<BITS>& operator >>= (unsigned long shift)
 	{
 		word carry, s;
-		if (shift >= sizeof(word) * 8)
+		if (shift >= WORD_BITS)
 		{
-			unsigned long wordShift = shift / (sizeof(word) * 8);
-			shift %= sizeof(word) * 8;
+			unsigned long wordShift = shift / (WORD_BITS);
+			shift %= WORD_BITS;
 
 			long i;
 
@@ -186,10 +248,10 @@ public:
 
 		while (shift > 0)
 		{
-			if (shift > sizeof(word) * 8)
+			if (shift > WORD_BITS)
 			{
-				s = sizeof(word) * 8;
-				shift -= sizeof(word) * 8;
+				s = WORD_BITS;
+				shift -= WORD_BITS;
 			}
 			else
 			{
@@ -201,7 +263,7 @@ public:
 				if (i)
 				{
 					carry = BIT_MASK(s) & (*this)[i];
-					(*this)[i - 1] = (*this)[i - 1] | (carry << (sizeof(word) * 8 - s));
+					(*this)[i - 1] = (*this)[i - 1] | (carry << (WORD_BITS - s));
 				}
 				(*this)[i] = (*this)[i] >> s;
 			}
@@ -221,10 +283,10 @@ public:
 		word carry, s;
 		while (shift > 0)
 		{
-			if (shift > sizeof(word) * 8)
+			if (shift > WORD_BITS)
 			{
-				s = sizeof(word) * 8;
-				shift -= sizeof(word) * 8;
+				s = WORD_BITS;
+				shift -= WORD_BITS;
 			}
 			else
 			{
@@ -235,10 +297,10 @@ public:
 			{
 				if (i != size() - 1)
 				{
-					carry = ~BIT_MASK(sizeof(word) * 8 - s) & (*this)[i];
+					carry = ~BIT_MASK(WORD_BITS - s) & (*this)[i];
 					(*this)[i + 1] = (*this)[i + 1] | carry;
 				}
-				if (s == sizeof(word) * 8)
+				if (s == WORD_BITS)
 				{
 					(*this)[i] = 0;
 				}
@@ -290,7 +352,7 @@ public:
 
 		for (long i = size() - 1; i >= 0; i--)
 		{
-			modulus <<= sizeof(word) * 8;
+			modulus <<= WORD_BITS;
 
 			modulus[0] = (*this)[i];
 			c[i] = 0;
@@ -313,7 +375,7 @@ public:
 
 		for (long i = size() - 1; i >= 0; i--)
 		{
-			remainder <<= sizeof(word) * 8;
+			remainder <<= WORD_BITS;
 
 			remainder[0] = (*this)[i];
 			c[i] = 0;
@@ -883,51 +945,65 @@ public:
 	word buffer[BITS / 8 / sizeof(word)];
 };
 
-
-template<>
-class integer<64>
+template<size_t BITS, class T, class HT>
+class primitive
 {
 public:
-	constexpr integer() : t() { }
+	constexpr primitive() : t() { }
 	template <size_t PBITS>
-	constexpr integer(const integer<PBITS>& t) : t(t[0]) { }
-	constexpr integer(const uint64&t) : t(t) {}
-	operator uint64& () { return t; }
-	constexpr operator const uint64& () const { return t; }
-	integer<128> operator*(uint64 s)
+	constexpr primitive(const integer<PBITS>& t) : t(t[0]) { }
+	constexpr primitive(const T&t) : t(t) {}
+
+	constexpr operator const T& () const { return t; }
+	operator T& () { return t; }
+	const T* operator& () const { return &t; }
+	T* operator& () { return &t; }
+
+	integer<BITS * 2> operator*(const T& s) const
 	{
-		integer<128> result;
-		uint32* temp = (uint32*)result.buffer;
-		uint32* a = (uint32*)&t;
-		uint32* b = (uint32*)&s;
+		return multiply(s);
+	}
+
+	integer<BITS * 2> multiply(const T& s) const
+	{
+		integer<BITS * 2> result;
+		HT* temp = (HT*)result.buffer;
+		HT* a = (HT*)&t;
+		HT* b = (HT*)&s;
 
 		int i, j;
 		for (i = 0; i < 2; ++i)
 		{
 			for (j = 0; j < 2; ++j)
 			{
-				uint64 c = (uint64)a[i] * (uint64)b[j] + temp[i + j];
+				T c = (T)a[i] * (T)b[j] + temp[i + j];
 
-				temp[i + j] = integer<64>(c).low();
-				temp[i + j + 1] += ((integer<64>*)&c)->high();
+				temp[i + j] = integer<BITS>(c).low();
+				temp[i + j + 1] += ((integer<BITS>*)&c)->high();
 			}
 		}
 		return result;
 	}
 
-	const uint64* operator& () const { return &t; }
-	uint64* operator& () { return &t; }
-	uint32 low() { return t; }
-	uint32 high() { return t >> 32; }
-	//static unsigned long size() { return 1; }
-	//const uint64& operator[](unsigned int i) const { return t; }
-	//uint64& operator[](unsigned int i) { return t; }
-private:
-	uint64 t;
+	HT low() { return t; }
+	HT high() { return t >> (BITS / 2); }
+
+	T t;
+};
+
+
+template<>
+class integer<64> : public primitive<64, uint64, uint32>
+{
+public:
+	constexpr integer() : primitive() { }
+	template <size_t PBITS>
+	constexpr integer(const integer<PBITS>& t) : primitive(t[0]) { }
+	constexpr integer(const uint64&t) : primitive(t) {}
 };
 
 template<>
-class integer<32>
+class integer<32> : public primitive<32, uint32, uint16>
 {
 public:
 	constexpr integer() : t() { }
@@ -935,14 +1011,12 @@ public:
 	operator uint32& () { return t; }
 	constexpr operator const uint32& () const { return t; }
 
-	const uint32* operator& () const { return &t; }
-	uint32* operator& () { return &t; }
 private:
 	uint32 t;
 };
 
 template<>
-class integer<16>
+class integer<16> : public primitive<16, uint16, uint8>
 {
 public:
 	constexpr integer() : t() { }
@@ -950,14 +1024,12 @@ public:
 	operator uint16& () { return t; }
 	constexpr operator const uint16& () const { return t; }
 
-	const uint16* operator& () const { return &t; }
-	uint16* operator& () { return &t; }
 private:
 	uint16 t;
 };
 
 template<>
-class integer<8>
+class integer<8>: public primitive<8, uint8, uint8>
 {
 public:
 	constexpr integer() : t() { }
@@ -965,8 +1037,6 @@ public:
 	operator uint8& () { return t; }
 	constexpr operator const uint8& () const { return t; }
 
-	const uint8* operator& () const { return &t; }
-	uint8* operator& () { return &t; }
 private:
 	uint8 t;
 };
