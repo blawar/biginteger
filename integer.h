@@ -125,7 +125,7 @@ public:
 				c += temp[i];
 
 				temp[i] = c.low();
-				temp[i + 1] += c.high();
+				temp[i + 1] = c.high();
 			}
 		}
 		return temp;
@@ -166,12 +166,26 @@ public:
 						c += temp[i + j];
 
 						temp[i + j] = c.low();
-						temp[i + j + 1] += c.high();
+						//temp[i + j + 1] += c.high();
+
+						bool carry = addWithCarry(temp[i + j + 1], c.high());
+
+						for (long z = 2; carry; z++)
+						{
+							carry = addWithCarry(temp[i + j + z], 1);
+						}
 					}
 				}
 			}
 		}
 		return temp;
+	}
+
+	bool static addWithCarry(word& a, const word& b)
+	{
+		word swap = a;
+		a += b;
+		return swap > a;
 	}
 
 	template<size_t PBITS>
@@ -650,7 +664,14 @@ public:
 		return temp;
 	}
 
-	integer<BITS>& operator+=(const integer<BITS> n)
+	integer<BITS>& operator+=(const integer<BITS>& n)
+	{
+		addWithCarry(n);
+
+		return *this;
+	}
+
+	bool addWithCarry(const integer<BITS>& n)
 	{
 		word num = 0;
 		int carry = 0;
@@ -672,8 +693,7 @@ public:
 
 			write(i, num);
 		}
-
-		return *this;
+		return carry;
 	}
 
 	template<size_t PBITS>
