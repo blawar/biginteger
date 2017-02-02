@@ -979,7 +979,14 @@ public:
 				T c = (T)a[i] * (T)b[j] + temp[i + j];
 
 				temp[i + j] = integer<BITS>(c).low();
+
+				HT swap = temp[i + j + 1];
 				temp[i + j + 1] += ((integer<BITS>*)&c)->high();
+
+				if (swap > temp[i + j + 1])
+				{
+					temp[i + j + 2]++;
+				}
 			}
 		}
 		return result;
