@@ -151,8 +151,8 @@ int main(int argc, const char * argv[])
 	//d.print();
 
 	//powmod(integer<128>((word)0x12345678aabbccdd), 0x100, integer<128>(0xabcdef0017569217)).print();
-	powmod(_sample, 0x100, modulus).print();
-	return 0;
+	//powmod(_sample, 0x100, modulus).print();
+	//return 0;
 	//a <<= 64;
 	//a -= 1;
 	//integer<64> b = 200;
@@ -176,9 +176,11 @@ int main(int argc, const char * argv[])
 	printf("sizeof(t) = %d\n", sizeof(*t));
 	modulus.pow<0x100>(*t).print();
 	delete t;*/
+	c = 42;
+	a = 2017;
 
-	//printf("%u\n", c.modularInverse(a));
-	//printf("%d\n", mul_inv(42, 2017));
+	c.modularInverse(a).print();
+	printf("%x\n", mul_inv(42, 2017));
 	//modulus.modularInverse(integer<2048>(0xFFFF)).print();
 	return 0;
 

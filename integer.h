@@ -181,6 +181,12 @@ public:
 		return swap > a;
 	}
 
+	bool static subtractWithBorrow(word& output, const word a, const word b)
+	{
+		output = a - b;
+		return b > a;
+	}
+
 	integer<BITS>& operator >>= (unsigned long shift)
 	{
 		word carry, s;
@@ -468,9 +474,9 @@ public:
 		return true;
 	}
 
-	integer<BITS> modularInverse(integer<BITS> b)
+	integer<BITS> modularInverse(integer<BITS> b) const
 	{
-		integer<BITS>& a = *this;
+		integer<BITS> a = *this;
 		integer<BITS> b0 = b, t, q;
 		integer<BITS> x0 = 0, x1 = 1;
 		bool sign = false;
@@ -486,15 +492,11 @@ public:
 			t = b;
 			b = a % b;
 			a = t;
-
 			t = x0;
-
-			integer<BITS * 2> t2 = q * x0;
-			x0 = x1 - t2;
-			if (t2 > x1)
-			{
-				sign = true;
-			}
+			//x0 = x1 - q * x0;
+			sign |= x1.subtractWithBorrow(q * x0);
+			x0 = x1;
+			//sign |= subtractWithBorrow(x0, x1, q * x0);
 			x1 = t;
 		}
 
