@@ -139,7 +139,6 @@ int main(int argc, const char * argv[])
 		==
 		integer<128>("\x00\x00\x00\x00\x00\x00\x00\x00\x39\x1d\xcf\x4e\x25\xf5\x3b\x1d")
 	);
-	return 0;
 
 	//a <<= 64;
 	//a -= integer<128>(1);
@@ -151,8 +150,8 @@ int main(int argc, const char * argv[])
 	//auto d = (integer<128>((word)0xabcdef0017569217) *  integer<128>((word)0x7a88500ae544c291));
 	//d.print();
 
-	powmod(integer<128>((word)0x12345678aabbccdd), 0x100, integer<128>(0xabcdef0017569217)).print();
-	//powmod(_sample, 0x1, modulus).print();
+	//powmod(integer<128>((word)0x12345678aabbccdd), 0x100, integer<128>(0xabcdef0017569217)).print();
+	powmod(_sample, 0x100, modulus).print();
 	return 0;
 	//a <<= 64;
 	//a -= 1;

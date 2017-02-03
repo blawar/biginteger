@@ -139,7 +139,12 @@ public:
 	template<size_t PBITS>
 	integer<BITS + PBITS> operator*(const integer<PBITS>& b) const
 	{
-		//return multiply(b);
+		return multiply(b);
+	}
+
+	template<size_t PBITS>
+	integer<BITS + PBITS> multiply(const integer<PBITS>& b) const
+	{
 		integer<BITS + PBITS> temp = 0;
 
 		int i, j;
@@ -151,22 +156,10 @@ public:
 				{
 					if (b[j] != 0)
 					{
-						if (i + j == 6)
-						{
-							int axx = 0;
-						}
-
-						if (i + j + 1 == 6)
-						{
-							int axx = 0;
-						}
-						//integer<WORD_BITS * 2> c = ((*this)[i]) * n[j] + temp[i + j];
 						integer<WORD_BITS * 2> c = integer<WORD_BITS>((*this)[i]) * integer<WORD_BITS>(b[j]);
-						//c *= n[j];
 						c += temp[i + j];
 
 						temp[i + j] = c.low();
-						//temp[i + j + 1] += c.high();
 
 						bool carry = addWithCarry(temp[i + j + 1], c.high());
 
@@ -186,57 +179,6 @@ public:
 		word swap = a;
 		a += b;
 		return swap > a;
-	}
-
-	template<size_t PBITS>
-	integer<BITS + PBITS> multiply(const integer<PBITS>& b) const
-	{
-		long i, j, k;
-		unsigned int i2;
-		const integer<BITS>& a = *this;
-		word temp;
-		bool carryIn, carryOut;
-
-		integer<BITS + PBITS> blk = 0;
-
-		for (i = 0; i < a.size(); i++)
-		{
-			for (i2 = 0; i2 < b.size(); i2++)
-			{
-				if ((a[i] & (1 << i2)) == 0)
-					continue;
-
-				for (j = 0, k = i, carryIn = false; j <= b.size(); j++, k++)
-				{
-					temp = blk[k] + getShiftedBlock(b, j, i2);
-					carryOut = (temp < blk[k]);
-
-					if (carryIn)
-					{
-						temp++;
-						carryOut |= (temp == 0);
-					}
-
-					blk[k] = temp;
-					carryIn = carryOut;
-				}
-
-				for (; carryIn; k++)
-				{
-					blk[k]++;
-					carryIn = (blk[k] == 0);
-				}
-			}
-		}
-		return blk;
-	}
-
-	template<size_t PBITS>
-	inline word getShiftedBlock(const integer<PBITS>& num, long x, unsigned int y) const
-	{
-		word part1 = (x == 0 || y == 0) ? 0 : (num[x - 1] >> (64 - y));
-		word part2 = (x == num.size()) ? 0 : (num[x] << y);
-		return part1 | part2;
 	}
 
 	integer<BITS>& operator >>= (unsigned long shift)
@@ -285,14 +227,14 @@ public:
 		return *this;
 	}
 
-	integer<BITS> operator >> (unsigned long shift) const
+	integer<BITS> operator>>(unsigned long shift) const
 	{
 		integer<BITS> temp = *this;
 		temp >>= shift;
 		return temp;
 	}
 
-	integer<BITS>& operator <<= (unsigned long shift)
+	integer<BITS>& operator<<=(unsigned long shift)
 	{
 		word carry, s;
 		while (shift > 0)
@@ -327,7 +269,7 @@ public:
 		return *this;
 	}
 
-	integer<BITS> operator << (unsigned long shift) const
+	integer<BITS> operator<<(unsigned long shift) const
 	{
 		integer<BITS> temp = *this;
 		temp <<= shift;
@@ -437,40 +379,17 @@ public:
 		unsigned long c = 0;
 		while (true)
 		{
-			if (c++ == 0x87d)
-			{
-				int y = 0;
-			}
 			integer<BITS> mid = (max + min) >> 1;
 			integer<BITS + PBITS> p = (divisor * mid);
 			integer<BITS>  posRem = dividend - p;
 
-			if (min >= integer<2048>("\xa9\xaa\xf4\xb5\x40\x55\x2a\xed\x22\xae\x23\x48\x3f\x28\x69\xa7\x7c\x41\x97\x42\x98\x70\x2c\xe5\x17\x78\x9c\xe8\x7b\xfd\x98\x0d\xc6\xd8\x95\xb6\x94\xc8\x36\x83\xd8\xe1\x87\x4b\x56\x7d\xd9\x40\x9b\xbf\x8b\x34\x68\x75\xee\x10\xf4\x3f\x69\x75\x90\x07\x3a\xce\xe9\x6b\xc3\xc2\x2e\x33\x82\x35\xe7\x63\x3d\xba\x54\x91\x15\x91\x74\x1e\x85\xe2\xea\x65\x28\x84\x50\xc4\xb3\x13\xa9\xdf\x6e\xee\x99\xd5\x1c\xba\xc4\x48\x3c\x39\x11\x18\x7d\x91\x25\x85\x6d\x8a\x2a\x0f\xe5\x96\x28\xea\x9b\xd9\xa7\x0a\xa6\x81\x43\xb5\xa2\xc1\x35\x3e\x76\xfa\x33\xa2\x5a\x3c\x32\x67\x77\x3e\x57\xc7\xa3\x94\xa2\x3c\x63\x70\xde\x15\x8a\x32\x36\x1a\x39\x92\x41\x5f\x36\x26\xdd\xda\x88\x49\x6e\xe2\x06\x0e\xcc\x1f\xc4\xde\xda\x1e\xd3\xdf\x66\x35\xef\x07\xd7\x67\x24\x9a\xb8\x5c\x6f\xf9\x22\x79\xff\xee\xa8\x48\x74\x29\x69\x47\xfc\xab\x68\x51\x0b\x2b\xf7\x01\xd2\x19\x66\xb8\x77\x3f\x08\x26\xde\x3a\x27\xa5\x72\x6b\x42\x4a\xcf\xec\x5b\x9a\xa4\xb5\x3c\x86\x1c\xd0\x12\xaf\xc6\x97\x86\x03\xc4\x5d\x71\x7c\xac\xad\x1e\xee\x05\x47\x16\xb0\xfd\xeb\x96\xbe\x60\x01"))
-			{
-				int x = 0;
-			}
-
 			if (p > dividend)
 			{
-				if (mid == max)
-				{
-					max -= integer<BITS>(1);
-				}
-				else
-				{
-					max = mid;
-				}
+				max = mid - integer<BITS>(1);
 			}
 			else if (posRem >= divisor)
 			{
-				if (mid == min)
-				{
-					min += integer<BITS>(1);
-				}
-				else
-				{
-					min = mid;
-				}
+				min = mid + integer<BITS>(1);
 			}
 			else
 			{
@@ -708,6 +627,13 @@ public:
 	template<size_t PBITS>
 	integer<BITS>& operator-=(const integer<PBITS>& n)
 	{
+		subtractWithBorrow(n);
+		return *this;
+	}
+
+	template<size_t PBITS>
+	bool subtractWithBorrow(const integer<PBITS>& n)
+	{
 		word num = 0;
 		int borrow = 0;
 		long len = MIN(size(), n.size());
@@ -774,8 +700,7 @@ public:
 				write(i, num);
 			}
 		}
-
-		return *this;
+		return borrow;
 	}
 
 	integer<BITS>& operator++(int)
