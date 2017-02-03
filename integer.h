@@ -306,6 +306,34 @@ public:
 		return product;
 	}
 
+	template <size_t PBITS>
+	integer<PBITS> powmodx(long exp, const integer<PBITS> modulus)
+	{
+		integer<BITS> product = 1;
+		integer<PBITS> sequence = *this % modulus;
+
+		printf("calculating inverse...\n");
+		integer<PBITS> inv = this->modularInverse(modulus);
+		inv.print();
+		printf("done\n\n");
+
+		while (exp != 0)
+		{
+			if (exp & 1)
+			{
+				printf("modulus: \n");
+				((product * sequence) % modulus).print();
+				printf("\ninversion multiply: \n");
+				((product * sequence) * inv).print();
+				return modulus;
+				product = (product * sequence) % modulus;
+			}
+			sequence = (sequence * sequence) % modulus;
+			exp >>= 1;
+		}
+		return product;
+	}
+
 	/*template <size_t PBITS>
 	integer<BITS> divide(const integer<PBITS> &b, integer<BITS> &modulus) const
 	{
@@ -884,7 +912,7 @@ public:
 		return (((byte*)buffer)[i / 8] >> (i % 8)) & 1;
 	}
 
-	static unsigned long size()
+	constexpr static unsigned long size()
 	{
 		return BITS / 8 / sizeof(word);
 	}
@@ -999,4 +1027,10 @@ template <size_t BITS, size_t PBITS>
 integer<PBITS> powmod(integer<BITS>& b, long exp, const integer<PBITS>& modulus)
 {
 	return b.powmod(exp, modulus);
+}
+
+template <size_t BITS, size_t PBITS>
+integer<PBITS> powmodx(integer<BITS>& b, long exp, const integer<PBITS>& modulus)
+{
+	return b.powmodx(exp, modulus);
 }

@@ -76,6 +76,9 @@ int main(int argc, const char * argv[])
 	integer<128> c = 42;
 	integer<2048> a;
 
+	//powmodx(_sample, 0x100, modulus);
+	//return 0;
+
 	assert(
 		integer<128>("\xFF\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
 		-
@@ -179,27 +182,70 @@ int main(int argc, const char * argv[])
 	c = 42;
 	a = 2017;
 
-	c.modularInverse(a).print();
+	//c.modularInverse(a).print();
 	printf("%x\n", mul_inv(42, 2017));
 	//modulus.modularInverse(integer<2048>(0xFFFF)).print();
-	return 0;
+	//return 0;
 
-	std::chrono::milliseconds start = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
-	//modulus = 1;
-	p = 2;
-	unsigned long i;
-	for (i = 0; i < 0x1000; i++)
 	{
-		c / integer<1024>(0xFFFF);
+		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		//modulus = 1;
+		p = 2;
+		unsigned long i;
+		integer<2048> remainder;
+		for (i = 0; i < 0x10000; i++)
+		{
+			_sample.divide(modulus, remainder);
+		}
+		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		if ((end - start).count() == 0)
+		{
+			printf("divide ops/sec = infinity\n");
+		}
+		else
+		{
+			printf("divide ops/sec = %d\n", i * 1000 / (end - start).count());
+		}
 	}
-	std::chrono::milliseconds end = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
-	if ((end - start).count() == 0)
+
 	{
-		printf("ops/sec = infinity\n");
+		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		//modulus = 1;
+		p = 2;
+		unsigned long i;
+		for (i = 0; i < 0x100000; i++)
+		{
+			_sample / modulus;
+		}
+		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		if ((end - start).count() == 0)
+		{
+			printf("divide and conqour ops/sec = infinity\n");
+		}
+		else
+		{
+			printf("divide and conqour ops/sec = %d\n", i * 1000 / (end - start).count());
+		}
 	}
-	else
+
 	{
-		printf("ops/sec = %d\n", i * 1000 / (end - start).count());
+		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		//modulus = 1;
+		p = 2;
+		unsigned long i;
+		for (i = 0; i < 0x5; i++)
+		{
+			powmod(_sample, 0x100, modulus);
+		}
+		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		if ((end - start).count() == 0)
+		{
+			printf("RSA 2048 decrypt ops/sec = infinity\n");
+		}
+		else
+		{
+			printf("RSA 2048 decrypt ops/sec = %2.2f\n", i * 1000.0f / (end - start).count());
+		}
 	}
 	//modulus = integer<1024>(0xFF) + integer<1024>(2);
 
