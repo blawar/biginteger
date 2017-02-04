@@ -57,7 +57,7 @@ public:
 		*this = n;
 	}
 
-	integer<BITS>(const void* n)
+	integer<BITS>(const char (&n)[BITS / 8 + 1])
 	{
 		const word* ptr = (word*)n;
 		for (int i = 0; i < size(); i++)
@@ -294,14 +294,18 @@ public:
 		integer<BITS> product = 1;
 		integer<PBITS> sequence = *this % modulus;
 
-		while (exp != 0)
+		while(exp != 0)
 		{
 			if (exp & 1)
 			{
 				product = (product * sequence) % modulus;
 			}
-			sequence = (sequence * sequence) % modulus;
 			exp >>= 1;
+			if (exp == 0)
+			{
+				break;
+			}
+			sequence = (sequence * sequence) % modulus;
 		}
 		return product;
 	}
