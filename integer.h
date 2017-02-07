@@ -47,11 +47,6 @@ public:
 		*this = 0;
 	}
 
-	integer<BITS>(int n)
-	{
-		*this = n;
-	}
-
 	integer<BITS>(word n)
 	{
 		*this = n;
@@ -85,19 +80,6 @@ public:
 		return *this;
 	}
 
-	/*integer<BITS>& operator=(int n)
-	{
-		memset(buffer, 0, size() * sizeof(word));
-		for (int i = 0; i < sizeof(n) && i < sizeof(word); i++)
-		{
-			((byte*)&buffer[0])[i] = ((byte*)&n)[i];
-		}
-		//memset(buffer, 0, size()  * sizeof(word));
-		//buffer[size() - 1] = n;
-
-		return *this;
-	}*/
-
 	integer<BITS>& operator=(word n)
 	{
 		memset(buffer, 0, size() * sizeof(word));
@@ -110,7 +92,6 @@ public:
 	operator word*() { return buffer; }
 	const word* operator &() const { return buffer; }
 	word* operator &() { return buffer; }
-	//operator const word& () const { return buffer[0]; }
 
 	integer<BITS + (WORD_BITS)> operator*(word n)
 	{
@@ -172,6 +153,44 @@ public:
 			}
 		}
 		return temp;
+	}
+
+	template<size_t PBITS, size_t P2BITS>
+	static integer<BITS + PBITS> multiplyKaratsuba(integer<P2BITS> a, integer<PBITS> b)
+	{
+		return a.multiplyKaratsuba(b);
+	}
+
+	static integer<sizeof(word) * 8 * 2> multiplyKaratsuba(word a, word b)
+	{
+		return integer<sizeof(word) * 8>(a) * integer<sizeof(word) * 8>(b);
+	}
+
+	template<size_t PBITS>
+	integer<BITS + PBITS> multiplyKaratsuba(integer<PBITS> b)
+	{
+		const integer<PBITS>& a = *this;
+
+		if (a.size() == 2 || b.size() == 2)
+		{
+			return a * b;
+		}
+
+		auto             al = a.low();
+		auto             ah = a.high();
+
+		auto             bl = b.low();
+		auto             bh = b.high();
+
+		integer<BITS + PBITS> z0 = multiplyKaratsuba(al, bl);
+		integer<BITS + PBITS> z1 = multiplyKaratsuba(al+ah, bl+bh);
+		integer<BITS + PBITS> z2 = multiplyKaratsuba(ah, bh);
+
+		return (z2 << MAX(BITS, PBITS))
+			+
+			((z1 - z2 - z0) << (MAX(BITS, PBITS) / 2))
+			+
+			(z0);
 	}
 
 	bool static addWithCarry(word& a, const word& b)
@@ -971,8 +990,18 @@ public:
 		return result;
 	}
 
+	integer<BITS * 2> multiplyKaratsuba(const T& s) const
+	{
+		return multiply(s);
+	}
+
 	HT low() { return t; }
 	HT high() { return t >> (BITS / 2); }
+
+	constexpr long size()
+	{
+		return 1;
+	}
 
 	T t;
 };
