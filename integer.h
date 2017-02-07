@@ -156,7 +156,7 @@ public:
 	}
 
 	template<size_t PBITS, size_t P2BITS>
-	static integer<BITS + PBITS> multiplyKaratsuba(integer<P2BITS> a, integer<PBITS> b)
+	static integer<BITS + PBITS> multiplyKaratsuba(const integer<P2BITS>& a, const integer<PBITS>& b)
 	{
 		return a.multiplyKaratsuba(b);
 	}
@@ -167,11 +167,11 @@ public:
 	}
 
 	template<size_t PBITS>
-	integer<BITS + PBITS> multiplyKaratsuba(integer<PBITS> b)
+	integer<BITS + PBITS> multiplyKaratsuba(const integer<PBITS>& b) const
 	{
 		const integer<PBITS>& a = *this;
 
-		if (a.size() == 2 || b.size() == 2)
+		if (a.size() == 1 || b.size() == 1)
 		{
 			return a * b;
 		}
@@ -208,7 +208,7 @@ public:
 
 	integer<BITS>& operator >>= (unsigned long shift)
 	{
-		word carry, s;
+		word carry;
 		if (shift >= WORD_BITS)
 		{
 			unsigned long wordShift = shift / (WORD_BITS);
@@ -227,26 +227,16 @@ public:
 			}
 		}
 
-		while (shift > 0)
+		if (shift > 0)
 		{
-			if (shift > WORD_BITS)
-			{
-				s = WORD_BITS;
-				shift -= WORD_BITS;
-			}
-			else
-			{
-				s = shift;
-				shift = 0;
-			}
 			for (long i = 0; i < size(); i++)
 			{
 				if (i)
 				{
-					carry = BIT_MASK(s) & (*this)[i];
-					(*this)[i - 1] = (*this)[i - 1] | (carry << (WORD_BITS - s));
+					carry = BIT_MASK(shift) & (*this)[i];
+					(*this)[i - 1] = (*this)[i - 1] | (carry << (WORD_BITS - shift));
 				}
-				(*this)[i] = (*this)[i] >> s;
+				(*this)[i] = (*this)[i] >> shift;
 			}
 		}
 		return *this;
@@ -261,34 +251,36 @@ public:
 
 	integer<BITS>& operator<<=(unsigned long shift)
 	{
-		word carry, s;
-		while (shift > 0)
+		word carry;
+
+		if (shift >= WORD_BITS)
 		{
-			if (shift > WORD_BITS)
+			unsigned long wordShift = shift / (WORD_BITS);
+			shift %= WORD_BITS;
+
+			long i;
+
+			for (i = size() - wordShift - 1; i >= 0; i--)
 			{
-				s = WORD_BITS;
-				shift -= WORD_BITS;
+				(*this)[i + wordShift] = (*this)[i];
 			}
-			else
+
+			for (i = wordShift - 1; i >= 0; i--)
 			{
-				s = shift;
-				shift = 0;
+				(*this)[i] = 0;
 			}
+		}
+
+		if (shift > 0)
+		{
 			for (long i = size() - 1; i >= 0; i--)
 			{
 				if (i != size() - 1)
 				{
-					carry = ~BIT_MASK(WORD_BITS - s) & (*this)[i];
+					carry = ~BIT_MASK(WORD_BITS - shift) & (*this)[i];
 					(*this)[i + 1] = (*this)[i + 1] | carry;
 				}
-				if (s == WORD_BITS)
-				{
-					(*this)[i] = 0;
-				}
-				else
-				{
-					(*this)[i] = (*this)[i] << s;
-				}
+				(*this)[i] = (*this)[i] << shift;
 			}
 		}
 		return *this;
