@@ -953,8 +953,6 @@ public:
 	word buffer[BITS / 8 / sizeof(word)];
 };
 
-#define RB ((HT*)result.buffer)
-
 template<size_t BITS, class T, class HT>
 class primitive
 {
@@ -1026,7 +1024,6 @@ public:
 
 		result.low() = s1 << 32 | s0;
 		result.high() = s3 << 32 | s2;
-
 		return result;
 	}
 
