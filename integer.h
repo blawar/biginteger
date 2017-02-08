@@ -284,7 +284,7 @@ public:
 
 
 		const auto z0 = al * bl;
-		const integer<BITS + PBITS / 2> z1 = asum.multiplyHalfWithCarry(bsum);
+		const integer<BITS + PBITS> z1 = asum.multiplyWithCarry(bsum);
 		//const integer<BITS + PBITS / 2> z1 = integer<BITS / 2>(asum) * integer<PBITS / 2>(bsum);
 		const auto z2 = ah * bh;
 
@@ -518,7 +518,7 @@ public:
 			return quotient;
 		}
 
-		if (divisor == integer<PBITS>(0))
+		if (divisor.empty())
 		{
 			// should throw exception here
 			quotient = 0;
@@ -531,7 +531,7 @@ public:
 		while (true)
 		{
 			integer<BITS> mid = (max + min) >> 1;
-			integer<BITS + PBITS> p = (divisor * mid);
+			auto p = (divisor * mid);
 			integer<BITS>  posRem = dividend - p;
 
 			if (p > dividend)
