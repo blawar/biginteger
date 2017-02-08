@@ -76,7 +76,7 @@ public:
 	integer<BITS>& operator=(const integer<PBITS>& n)
 	{
 		memset(buffer, 0, size() * sizeof(word));
-		memcpy(buffer, (const word*)n, MIN(size() * sizeof(word), n.size() * sizeof(word)));
+		memcpy(buffer, (const word*)&n, MIN(size() * sizeof(word), n.size() * sizeof(word)));
 		return *this;
 	}
 
@@ -120,18 +120,19 @@ public:
 	template<size_t PBITS>
 	integer<BITS + PBITS> operator*(const integer<PBITS>& b) const
 	{
-		return multiply(b);
+		if (BITS + PBITS >= 1024)
+		{
+			return multiplyKaratsuba(b);
+		}
+		else
+		{
+			return multiply(b);
+		}
 	}
 
 	template<size_t PBITS>
 	integer<BITS + PBITS> multiply(const integer<PBITS>& b) const
 	{
-		/*if (BITS + PBITS >= 1024)
-		{
-			return multiplyKaratsuba(b);
-		}*/
-		//return multiplyKaratsuba(b);
-
 		integer<BITS + PBITS> temp = 0;
 
 		int i, j;
@@ -188,9 +189,15 @@ public:
 		const auto bl = b.low();
 		const auto bh = b.high();
 
-		const auto z0 = integer<BITS>(al) * integer<PBITS>(bl);
-		const integer<BITS+PBITS> z1 = (integer<BITS / 2 + (WORD_BITS)>(al) + ah) * (integer<PBITS / 2 + (WORD_BITS)>(bl) + bh);
-		const auto z2 = integer<BITS>(ah) * integer<PBITS>(bh);
+		integer<BITS> asum = al;
+		asum.addWithCarry(ah);
+		integer<PBITS> bsum = bl;
+		bsum.addWithCarry(bh);
+
+
+		const auto z0 = al * bl;
+		const integer<BITS + PBITS> z1 = asum.multiply(bsum);
+		const auto z2 = ah * bh;
 
 		integer<BITS + PBITS> result;
 		result.high() = z2;
@@ -961,6 +968,25 @@ public:
 	const T* operator& () const { return &t; }
 	T* operator& () { return &t; }
 
+	bool addWithCarry(const T& n)
+	{
+		t += n;
+		return false;
+	}
+
+	bool addWithCarry(const integer<BITS>& n)
+	{
+		return false;
+	}
+
+	//operator const word*() const { return (const word*)&t; }
+	//operator word*() { return (word*)&t; }
+
+	word read(unsigned long i) const
+	{
+		return t;
+	}
+
 	integer<BITS * 2> operator*(const T& s) const
 	{
 		return multiply(s);
@@ -994,6 +1020,16 @@ public:
 			}
 		}
 		return result;
+	}
+
+	integer<BITS * 2> operator*(const integer<BITS>& b) const
+	{
+		return multiply(b);
+	}
+
+	integer<BITS * 2> multiplyKaratsuba(const integer<BITS>& b) const
+	{
+		return multiply(b);
 	}
 
 	integer<BITS * 2> multiply(const T& b) const
