@@ -183,19 +183,25 @@ public:
 			return a * b;
 		}
 
-		auto al = a.low();
-		auto ah = a.high();
+		const auto al = a.low();
+		const auto ah = a.high();
 
-		auto bl = b.low();
-		auto bh = b.high();
+		const auto bl = b.low();
+		const auto bh = b.high();
 
 		/*auto z0 = multiplyKaratsuba(al, bl);
 		auto z1 = multiplyKaratsuba(al+ah, bl+bh);
 		auto z2 = multiplyKaratsuba(ah, bh);*/
 
-		auto z0 = al * bl;
-		integer<PBITS + BITS> z1 = (al + ah) * (bl + bh);
-		auto z2 = ah * bh;
+		const integer<BITS + PBITS> z0 = integer<BITS>(al) * integer<PBITS>(bl);
+		const integer<BITS + PBITS> z1 = integer<BITS>(integer<BITS>(al) + integer<BITS>(ah)) * integer<PBITS>(integer<PBITS>(bl) + integer<PBITS>(bh));
+		const integer<BITS + PBITS> z2 = integer<BITS>(ah) * integer<PBITS>(bh);
+
+		integer<BITS + PBITS> result;
+		result.high() = z2;
+		result.low() = z0;
+		result += ((z1 - z2 - z0) << (MAX(BITS, PBITS) / 2));
+		return result;
 
 		//return z2 + (z1 - z2 - z0) + z0;
 		return (z2 << MAX(BITS, PBITS))
@@ -1027,8 +1033,8 @@ public:
 		return result;
 	}
 
-	const HT& low() const { return (HT&)t; }
-	const HT& high() const { return *((HT*)&t + 1); }
+	const constexpr HT& low() const { return (HT&)t; }
+	const constexpr HT& high() const { return *((HT*)&t + 1); }
 
 	HT& low() { return (HT&)t; }
 	HT& high() { return *((HT*)&t + 1); }
