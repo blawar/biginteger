@@ -179,7 +179,6 @@ public:
 
 		if (a.size() == 1 || b.size() == 1)
 		{
-			//return 0;
 			return a * b;
 		}
 
@@ -189,26 +188,15 @@ public:
 		const auto bl = b.low();
 		const auto bh = b.high();
 
-		/*auto z0 = multiplyKaratsuba(al, bl);
-		auto z1 = multiplyKaratsuba(al+ah, bl+bh);
-		auto z2 = multiplyKaratsuba(ah, bh);*/
-
-		const integer<BITS + PBITS> z0 = integer<BITS>(al) * integer<PBITS>(bl);
-		const integer<BITS + PBITS> z1 = integer<BITS>(integer<BITS>(al) + integer<BITS>(ah)) * integer<PBITS>(integer<PBITS>(bl) + integer<PBITS>(bh));
-		const integer<BITS + PBITS> z2 = integer<BITS>(ah) * integer<PBITS>(bh);
+		const auto z0 = integer<BITS>(al) * integer<PBITS>(bl);
+		const integer<BITS+PBITS> z1 = (integer<BITS / 2 + (WORD_BITS)>(al) + ah) * (integer<PBITS / 2 + (WORD_BITS)>(bl) + bh);
+		const auto z2 = integer<BITS>(ah) * integer<PBITS>(bh);
 
 		integer<BITS + PBITS> result;
 		result.high() = z2;
 		result.low() = z0;
 		result += ((z1 - z2 - z0) << (MAX(BITS, PBITS) / 2));
 		return result;
-
-		//return z2 + (z1 - z2 - z0) + z0;
-		return (z2 << MAX(BITS, PBITS))
-			+
-			((z1 - z2 - z0) << (MAX(BITS, PBITS) / 2))
-			+
-			(z0);
 	}
 
 	bool static addWithCarry(word& a, const word& b)
