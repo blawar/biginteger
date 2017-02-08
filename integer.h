@@ -120,7 +120,7 @@ public:
 	template<size_t PBITS>
 	integer<BITS + PBITS> operator*(const integer<PBITS>& b) const
 	{
-		if (BITS + PBITS >= 1024)
+		if (BITS + PBITS >= 2048)
 		{
 			return multiplyKaratsuba(b);
 		}
@@ -189,9 +189,9 @@ public:
 		const auto bl = b.low();
 		const auto bh = b.high();
 
-		integer<BITS> asum = al;
+		integer<BITS / 2 + WORD_BITS> asum = al;
 		asum.addWithCarry(ah);
-		integer<PBITS> bsum = bl;
+		integer<PBITS / 2 + WORD_BITS> bsum = bl;
 		bsum.addWithCarry(bh);
 
 
