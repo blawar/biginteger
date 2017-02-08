@@ -197,11 +197,6 @@ public:
 		bool bh = !b.high().empty();
 		bool ah = !a.high().empty();
 
-		if (!bh && !ah)
-		{
-			return a.low() * b.low();
-		}
-
 		integer<BITS> x = a.low() * b.low();
 
 		s0 = x.low();
