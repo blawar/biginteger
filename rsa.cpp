@@ -261,6 +261,26 @@ int main(int argc, const char * argv[])
 	{
 		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
 		unsigned long i;
+		integer<64> t = 0xabcdef0012345678;
+		integer<128> r;
+		for (i = 0; i < 0x1f0000; i++)
+		{
+			r = t * t;
+		}
+		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		if ((end - start).count() == 0)
+		{
+			printf("multiply 64-bit ops/sec = infinity\n");
+		}
+		else
+		{
+			printf("multiply 64-bit ops/sec = %d\n", i * 1000 / (end - start).count());
+		}
+	}
+
+	{
+		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		unsigned long i;
 		for (i = 0; i < 0x10000; i++)
 		{
 			_sample.multiply(modulus);

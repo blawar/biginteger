@@ -974,52 +974,26 @@ public:
 		return multiply(s);
 	}
 
-	integer<BITS * 2> multiply2(const T& b) const
-	{
-		const primitive<BITS, T, HT>& a = *this;
-
-		HT al = a.low();
-		HT ah = a.high();
-
-		HT bl = (HT)b;
-		HT bh = b >> (BITS / 2);
-
-		integer<BITS * 2> z0 = (T)al * bl;
-		integer<BITS * 2> z1 = T((T)al + (T)ah) * T((T)bl + (T)bh);
-		integer<BITS * 2> z2 = (T)ah * bh;
-
-		z1 -= z2;
-		z1 -= z0;
-		z2 <<= BITS;
-		z1 << (BITS / 2);
-
-		return z0 + z1 + z2;
-
-		return (z2 << BITS)
-			+
-			((z1 - z2 - z0) << (BITS / 2))
-			+
-			(z0);
-	}
-
-	integer<BITS * 2> multiply(const T& s) const
+	integer<BITS * 2> multiplyOld(const T& s) const
 	{
 		integer<BITS * 2> result;
-		HT* temp = (HT*)result.buffer;
-		HT* a = (HT*)&t;
-		HT* b = (HT*)&s;
+		//HT* temp = (HT*)result.buffer;
+		/*HT* a = (HT*)&t;
+		HT* b = (HT*)&s;*/
+
+		const HT (&a)[2] = reinterpret_cast<const HT(&)[2]>(t);
+		const HT(&b)[2] = reinterpret_cast<const HT(&)[2]>(s);
 
 		for (int i = 0; i < 2; ++i)
 		{
 			for (int j = 0; j < 2; ++j)
 			{
-				//int ij = i + j;
 				T c = T(a[i]) * T(b[j]) + RB[i + j];
 
 				RB[i + j] = integer<BITS>(c).low();
 
 				HT swap = RB[i + j + 1];
-				RB[i + j + 1] += ((integer<BITS>*)&c)->high();
+				RB[i + j + 1] += integer<BITS>(c).high();
 
 				if (swap > RB[i + j + 1])
 				{
@@ -1030,13 +1004,37 @@ public:
 		return result;
 	}
 
-	integer<BITS * 2> multiplyKaratsuba(const T& s) const
+	integer<BITS * 2> multiply(const T& b) const
 	{
-		return multiply(s);
+		integer<BITS * 2> result;
+
+		T s0, s1, s2, s3;
+
+		T x = (T)integer<BITS>(t).low() * integer<BITS>(b).low();
+		s0 = integer<BITS>(x).low();
+
+		x = (T)integer<BITS>(t).high() * integer<BITS>(b).low() + integer<BITS>(x).high();
+		s1 = integer<BITS>(x).low();
+		s2 = integer<BITS>(x).high();
+
+		x = s1 + (T)integer<BITS>(t).low() * integer<BITS>(b).high();
+		s1 = integer<BITS>(x).low();
+
+		x = s2 + (T)integer<BITS>(t).high() * integer<BITS>(b).high() + integer<BITS>(x).high();
+		s2 = integer<BITS>(x).low();
+		s3 = integer<BITS>(x).high();
+
+		result.low() = s1 << 32 | s0;
+		result.high() = s3 << 32 | s2;
+
+		return result;
 	}
 
-	HT low() const { return t; }
-	HT high() const { return t >> (BITS / 2); }
+	const HT& low() const { return (HT&)t; }
+	const HT& high() const { return *((HT*)&t + 1); }
+
+	HT& low() { return (HT&)t; }
+	HT& high() { return *((HT*)&t + 1); }
 
 	constexpr long size()
 	{
