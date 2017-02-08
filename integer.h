@@ -126,16 +126,22 @@ public:
 	template<size_t PBITS>
 	integer<BITS + PBITS> multiply(const integer<PBITS>& b) const
 	{
+		/*if (BITS + PBITS >= 1024)
+		{
+			return multiplyKaratsuba(b);
+		}*/
+		//return multiplyKaratsuba(b);
+
 		integer<BITS + PBITS> temp = 0;
 
 		int i, j;
 		for (i = 0; i < size(); ++i)
 		{
-			if (read(i) != 0)
+			//if (read(i) != 0)
 			{
 				for (j = 0; j < b.size(); ++j)
 				{
-					if (b[j] != 0)
+					//if (b[j] != 0)
 					{
 						integer<WORD_BITS * 2> c = integer<WORD_BITS>((*this)[i]) * integer<WORD_BITS>(b[j]);
 						c += temp[i + j];
@@ -173,19 +179,25 @@ public:
 
 		if (a.size() == 1 || b.size() == 1)
 		{
+			//return 0;
 			return a * b;
 		}
 
-		auto             al = a.low();
-		auto             ah = a.high();
+		auto al = a.low();
+		auto ah = a.high();
 
-		auto             bl = b.low();
-		auto             bh = b.high();
+		auto bl = b.low();
+		auto bh = b.high();
 
-		integer<BITS + PBITS> z0 = multiplyKaratsuba(al, bl);
-		integer<BITS + PBITS> z1 = multiplyKaratsuba(al+ah, bl+bh);
-		integer<BITS + PBITS> z2 = multiplyKaratsuba(ah, bh);
+		/*auto z0 = multiplyKaratsuba(al, bl);
+		auto z1 = multiplyKaratsuba(al+ah, bl+bh);
+		auto z2 = multiplyKaratsuba(ah, bh);*/
 
+		auto z0 = al * bl;
+		integer<PBITS + BITS> z1 = (al + ah) * (bl + bh);
+		auto z2 = ah * bh;
+
+		//return z2 + (z1 - z2 - z0) + z0;
 		return (z2 << MAX(BITS, PBITS))
 			+
 			((z1 - z2 - z0) << (MAX(BITS, PBITS) / 2))
@@ -902,24 +914,30 @@ public:
 		printf("\n");
 	}
 
-	integer<BITS / 2> low() const
+	const constexpr integer<BITS / 2>& low() const
 	{
-		integer<BITS / 2> temp = *this;
-		//memcpy(&temp, (byte*)buffer, BITS / 8 / 2);
-		return temp;
+		return reinterpret_cast<const integer<BITS / 2>&>(*this);
+		/*integer<BITS / 2> temp = *this;
+		memcpy(&temp, (byte*)buffer, BITS / 8 / 2);
+		return temp;*/
 	}
 
-	integer<BITS / 2> high() const
+	const constexpr integer<BITS / 2>& high() const
 	{
-		integer<BITS / 2> temp;
+		return reinterpret_cast<const integer<BITS / 2>&>(*(buffer + size() / 2));
+		/*integer<BITS / 2> temp;
 		memcpy(&temp, (byte*)buffer + (BITS / 8 / 2), BITS / 8 / 2);
-		return temp;
-		/*if (BITS / 2 == 64)
-		{
-			int t = 0;
-		}
-		integer<BITS / 2> temp = (*this >> (BITS / 2));
 		return temp;*/
+	}
+
+	integer<BITS / 2>& low()
+	{
+		return reinterpret_cast<integer<BITS / 2>&>(*this);
+	}
+
+	integer<BITS / 2>& high()
+	{
+		return reinterpret_cast<integer<BITS / 2>&>(*(buffer + size() / 2));
 	}
 
 	bool bit(unsigned long i)
@@ -934,6 +952,8 @@ public:
 	//private:
 	word buffer[BITS / 8 / sizeof(word)];
 };
+
+#define RB ((HT*)result.buffer)
 
 template<size_t BITS, class T, class HT>
 class primitive
@@ -954,6 +974,34 @@ public:
 		return multiply(s);
 	}
 
+	integer<BITS * 2> multiply2(const T& b) const
+	{
+		const primitive<BITS, T, HT>& a = *this;
+
+		HT al = a.low();
+		HT ah = a.high();
+
+		HT bl = (HT)b;
+		HT bh = b >> (BITS / 2);
+
+		integer<BITS * 2> z0 = (T)al * bl;
+		integer<BITS * 2> z1 = T((T)al + (T)ah) * T((T)bl + (T)bh);
+		integer<BITS * 2> z2 = (T)ah * bh;
+
+		z1 -= z2;
+		z1 -= z0;
+		z2 <<= BITS;
+		z1 << (BITS / 2);
+
+		return z0 + z1 + z2;
+
+		return (z2 << BITS)
+			+
+			((z1 - z2 - z0) << (BITS / 2))
+			+
+			(z0);
+	}
+
 	integer<BITS * 2> multiply(const T& s) const
 	{
 		integer<BITS * 2> result;
@@ -961,21 +1009,21 @@ public:
 		HT* a = (HT*)&t;
 		HT* b = (HT*)&s;
 
-		int i, j;
-		for (i = 0; i < 2; ++i)
+		for (int i = 0; i < 2; ++i)
 		{
-			for (j = 0; j < 2; ++j)
+			for (int j = 0; j < 2; ++j)
 			{
-				T c = (T)a[i] * (T)b[j] + temp[i + j];
+				//int ij = i + j;
+				T c = T(a[i]) * T(b[j]) + RB[i + j];
 
-				temp[i + j] = integer<BITS>(c).low();
+				RB[i + j] = integer<BITS>(c).low();
 
-				HT swap = temp[i + j + 1];
-				temp[i + j + 1] += ((integer<BITS>*)&c)->high();
+				HT swap = RB[i + j + 1];
+				RB[i + j + 1] += ((integer<BITS>*)&c)->high();
 
-				if (swap > temp[i + j + 1])
+				if (swap > RB[i + j + 1])
 				{
-					temp[i + j + 2]++;
+					RB[i + j + 2]++;
 				}
 			}
 		}
@@ -987,8 +1035,8 @@ public:
 		return multiply(s);
 	}
 
-	HT low() { return t; }
-	HT high() { return t >> (BITS / 2); }
+	HT low() const { return t; }
+	HT high() const { return t >> (BITS / 2); }
 
 	constexpr long size()
 	{

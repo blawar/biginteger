@@ -76,6 +76,24 @@ int main(int argc, const char * argv[])
 	integer<128> c = 42;
 	integer<2048> a;
 
+	/*{
+		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		unsigned long i;
+		for (i = 0; i < 0xffff; i++)
+		{
+			_sample.multiplyKaratsuba(modulus);
+		}
+		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		if ((end - start).count() == 0)
+		{
+			printf("multiply Karatsuba ops/sec = infinity\n");
+		}
+		else
+		{
+			printf("multiply Karatsuba ops/sec = %d\n", i * 1000 / (end - start).count());
+		}
+	}
+	return 0;*/
 	//powmodx(_sample, 0x100, modulus);
 	//return 0;
 
@@ -117,6 +135,14 @@ int main(int argc, const char * argv[])
 		1024
 		==
 		integer<1024>("\xde\xcf\xb6\xfc\x3d\x33\xe9\x55\xfd\xac\x90\xe8\x88\x17\xb0\x03\xa1\x6b\x9a\xab\x72\x70\x79\x32\xa2\xa0\x8c\xbb\x33\x6f\xb0\x76\x96\x2e\xc4\xe9\x2e\xd8\x8f\x92\xc0\x2d\x4d\x41\x0f\xde\x45\x1b\x25\x3c\xbe\x37\x6b\x45\x82\x21\xe6\x4d\xb1\x23\x81\x82\xb6\x81\x62\xb7\x30\xf4\x60\x4b\xc7\xf7\xf0\x17\x0c\xb5\x75\x88\x77\x93\x52\x63\x70\xf0\x0b\xc6\x73\x43\x41\xee\xe4\xf0\x71\xec\xc8\xc1\x32\xc4\xdc\xa9\x99\x1d\x31\xb8\xa4\x7e\xdd\x19\x04\x0f\x02\xa8\x1a\xaf\xb3\x48\x9a\x29\x29\x5e\x49\x84\xe0\x94\x11\xd1\x7e\xab")
+	);
+
+	assert(
+		integer<128>("\x00\x00\x00\x00\x00\x00\x00\x00\xAA\xBB\xCC\xDD\x12\x34\x56\x78")
+		<<
+		64
+		==
+		integer<128>("\xAA\xBB\xCC\xDD\x12\x34\x56\x78\x00\x00\x00\x00\x00\x00\x00\x00")
 	);
 
 	assert(
@@ -195,6 +221,42 @@ int main(int argc, const char * argv[])
 	printf("%x\n", mul_inv(42, 2017));
 	//modulus.modularInverse(integer<2048>(0xFFFF)).print();
 	//return 0;
+
+	{
+		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		unsigned long i;
+		for (i = 0; i < 0x10000; i++)
+		{
+			_sample + modulus;
+		}
+		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		if ((end - start).count() == 0)
+		{
+			printf("addition ops/sec = infinity\n");
+		}
+		else
+		{
+			printf("addition ops/sec = %d\n", i * 1000 / (end - start).count());
+		}
+	}
+
+	{
+		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		unsigned long i;
+		for (i = 0; i < 0x10000; i++)
+		{
+			_sample - modulus;
+		}
+		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		if ((end - start).count() == 0)
+		{
+			printf("subtraction ops/sec = infinity\n");
+		}
+		else
+		{
+			printf("subtraction ops/sec = %d\n", i * 1000 / (end - start).count());
+		}
+	}
 
 	{
 		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
