@@ -130,6 +130,60 @@ public:
 		}
 	}
 
+	integer<BITS * 2> multiplyWithCarry(const integer<BITS>& b) const
+	{
+		const integer<BITS>& a = *this;
+		integer<BITS * 2> result;
+
+		integer<BITS> s0, s1, s2, s3;
+		bool bh = b.high() != integer<WORD_BITS>(0);
+		bool ah = a.high() != integer<WORD_BITS>(0);
+
+		if (!bh && !ah)
+		{
+			return a.low() * b.low();
+		}
+
+		integer<BITS> x = a.low() * b.low();
+
+		s0 = x.low();
+
+		x = a.high() * b.low() + x.high();
+		s1 = x.low();
+		s2 = x.high();
+
+		x = s1;
+		if (bh)
+		{
+			x += a.low() * b.high();
+		}
+
+		s1 = x.low();
+
+
+		if (ah && bh)
+		{
+			x = integer<BITS>(x).high();
+			//x >>= (BITS / 2);
+			x += a.high() * b.high();
+			x += s2;
+		}
+		else
+		{
+			x = integer<BITS>(x).high();
+			x += s2;
+
+		}
+		s2 = x.low();
+		s3 = x.high();
+
+		result.low().low() = s0;
+		result.low().high() = s1;
+		result.high().low() = s2;
+		result.high().high() = s3;
+		return result;
+	}
+
 	template<size_t PBITS>
 	integer<BITS + PBITS> multiply(const integer<PBITS>& b) const
 	{
@@ -189,14 +243,14 @@ public:
 		const auto bl = b.low();
 		const auto bh = b.high();
 
-		integer<BITS / 2 + WORD_BITS> asum = al;
-		asum.addWithCarry(ah);
-		integer<PBITS / 2 + WORD_BITS> bsum = bl;
-		bsum.addWithCarry(bh);
+		integer<BITS> asum = al;
+		asum += ah;
+		integer<PBITS> bsum = bl;
+		bsum += bh;
 
 
 		const auto z0 = al * bl;
-		const integer<BITS + PBITS> z1 = asum.multiply(bsum);
+		const integer<BITS + PBITS> z1 = asum.multiplyWithCarry(bsum);
 		const auto z2 = ah * bh;
 
 		integer<BITS + PBITS> result;
@@ -968,16 +1022,17 @@ public:
 	const T* operator& () const { return &t; }
 	T* operator& () { return &t; }
 
-	bool addWithCarry(const T& n)
+	bool addWithCarry(const T& b)
 	{
-		t += n;
-		return false;
+		T swap = t;
+		t += b;
+		return swap > t;
 	}
 
-	bool addWithCarry(const integer<BITS>& n)
+	/*bool addWithCarry(const integer<BITS>& n)
 	{
 		return false;
-	}
+	}*/
 
 	//operator const word*() const { return (const word*)&t; }
 	//operator word*() { return (word*)&t; }
@@ -1030,6 +1085,11 @@ public:
 	integer<BITS * 2> multiplyKaratsuba(const integer<BITS>& b) const
 	{
 		return multiply(b);
+	}
+
+	integer<BITS * 2> multiply(const integer<BITS>& b) const
+	{
+		return multiply(T(b));
 	}
 
 	integer<BITS * 2> multiply(const T& b) const
@@ -1086,39 +1146,34 @@ template<>
 class integer<32> : public primitive<32, uint32, uint16>
 {
 public:
-	constexpr integer() : t() { }
-	constexpr integer(const uint32&t) : t(t) {}
+	constexpr integer() : primitive() { }
+	constexpr integer(const uint32&t) : primitive(t) {}
+	constexpr integer(const word t) : primitive(t) {}
 	operator uint32& () { return t; }
 	constexpr operator const uint32& () const { return t; }
 
-private:
-	uint32 t;
 };
 
 template<>
 class integer<16> : public primitive<16, uint16, uint8>
 {
 public:
-	constexpr integer() : t() { }
-	constexpr integer(const uint16&t) : t(t) {}
+	constexpr integer() : primitive() { }
+	constexpr integer(const uint16&t) : primitive(t) {}
+	constexpr integer(const word t) : primitive(t) {}
 	operator uint16& () { return t; }
 	constexpr operator const uint16& () const { return t; }
-
-private:
-	uint16 t;
 };
 
 template<>
 class integer<8>: public primitive<8, uint8, uint8>
 {
 public:
-	constexpr integer() : t() { }
-	constexpr integer(const uint8&t) : t(t) {}
+	constexpr integer() : primitive() { }
+	constexpr integer(const uint8&t) : primitive(t) {}
+	constexpr integer(const word t) : primitive(t) {}
 	operator uint8& () { return t; }
 	constexpr operator const uint8& () const { return t; }
-
-private:
-	uint8 t;
 };
 
 template <size_t BITS, size_t PBITS>
