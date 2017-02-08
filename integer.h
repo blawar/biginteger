@@ -120,11 +120,11 @@ public:
 	template<size_t PBITS>
 	integer<BITS + PBITS> operator*(const integer<PBITS>& b) const
 	{
-		if (BITS + PBITS >= 2048)
+		/*if (BITS + PBITS >= 2048)
 		{
 			return multiplyKaratsuba(b);
 		}
-		else
+		else*/
 		{
 			return multiply(b);
 		}
@@ -136,8 +136,8 @@ public:
 		integer<BITS * 2> result;
 
 		integer<BITS> s0, s1, s2, s3;
-		bool bh = b.high() != integer<WORD_BITS>(0);
-		bool ah = a.high() != integer<WORD_BITS>(0);
+		bool bh = !b.high().empty();
+		bool ah = !a.high().empty();
 
 		if (!bh && !ah)
 		{
@@ -148,14 +148,19 @@ public:
 
 		s0 = x.low();
 
-		x = a.high() * b.low() + x.high();
+		x = integer<BITS>(x).high();
+		if (ah)
+		{
+			x += b.low();
+		}
+
 		s1 = x.low();
 		s2 = x.high();
 
 		x = s1;
 		if (bh)
 		{
-			x += a.low() * b.high();
+			x += a.low();
 		}
 
 		s1 = x.low();
@@ -164,8 +169,7 @@ public:
 		if (ah && bh)
 		{
 			x = integer<BITS>(x).high();
-			//x >>= (BITS / 2);
-			x += a.high() * b.high();
+			x++;
 			x += s2;
 		}
 		else
@@ -181,6 +185,45 @@ public:
 		result.low().high() = s1;
 		result.high().low() = s2;
 		result.high().high() = s3;
+		return result;
+	}
+
+	integer<BITS> multiplyHalfWithCarry(const integer<BITS>& b) const
+	{
+		const integer<BITS>& a = *this;
+		integer<BITS> result;
+
+		integer<BITS> s0, s1;
+		bool bh = !b.high().empty();
+		bool ah = !a.high().empty();
+
+		if (!bh && !ah)
+		{
+			return a.low() * b.low();
+		}
+
+		integer<BITS> x = a.low() * b.low();
+
+		s0 = x.low();
+
+		x = integer<BITS>(x).high();
+		if (ah)
+		{
+			x += b.low();
+		}
+
+		s1 = x.low();
+
+		x = s1;
+		if (bh)
+		{
+			x += a.low();
+		}
+
+		s1 = x.low();
+
+		result.low() = s0;
+		result.high() = s1;
 		return result;
 	}
 
@@ -250,7 +293,8 @@ public:
 
 
 		const auto z0 = al * bl;
-		const integer<BITS + PBITS> z1 = asum.multiplyWithCarry(bsum);
+		const integer<BITS + PBITS / 2> z1 = asum.multiplyHalfWithCarry(bsum);
+		//const integer<BITS + PBITS / 2> z1 = integer<BITS / 2>(asum) * integer<PBITS / 2>(bsum);
 		const auto z2 = ah * bh;
 
 		integer<BITS + PBITS> result;
@@ -545,6 +589,19 @@ public:
 	{
 		integer<BITS> temp = *this % b;
 		return *this = temp;
+	}
+
+	bool empty() const
+	{
+		const integer<BITS>& a = *this;
+		for (long i = 0; i < size(); i++)
+		{
+			if (a[i])
+			{
+				return false;
+			}
+		}
+		return true;
 	}
 
 	template<size_t PBITS>
@@ -1119,6 +1176,7 @@ public:
 
 	const constexpr HT& low() const { return (HT&)t; }
 	const constexpr HT& high() const { return *((HT*)&t + 1); }
+	bool empty() const { return t == 0; }
 
 	HT& low() { return (HT&)t; }
 	HT& high() { return *((HT*)&t + 1); }
