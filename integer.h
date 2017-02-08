@@ -193,13 +193,12 @@ public:
 		const integer<BITS>& a = *this;
 		integer<BITS> result;
 
-		integer<BITS> s0, s1;
 		bool bh = !b.high().empty();
 		bool ah = !a.high().empty();
 
 		integer<BITS> x = a.low() * b.low();
 
-		s0 = x.low();
+		result.low() = x.low();
 
 		x = integer<BITS>(x).high();
 		if (ah)
@@ -207,18 +206,15 @@ public:
 			x += b.low();
 		}
 
-		s1 = x.low();
+		result.high() = x.low();
 
-		x = s1;
+		x = result.high();
 		if (bh)
 		{
 			x += a.low();
 		}
 
-		s1 = x.low();
-
-		result.low() = s0;
-		result.high() = s1;
+		result.high() = x.low();
 		return result;
 	}
 
