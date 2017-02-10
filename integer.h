@@ -3,7 +3,9 @@
 #define MINUS	-1
 
 #include <limits>
+#ifdef _MSC_VER
 #include <intrin.h>
+#endif
 
 typedef uint64_t uint64;
 typedef uint32_t uint32;
@@ -121,7 +123,7 @@ public:
 	template<size_t PBITS>
 	integer<BITS + PBITS> operator*(const integer<PBITS>& b) const
 	{
-		if (BITS + PBITS >= 2048 && BITS == PBITS)
+		if (BITS + PBITS >= 4096 && BITS == PBITS)
 		{
 			return multiplyKaratsuba(b);
 		}
@@ -1249,6 +1251,19 @@ public:
 	integer<BITS * 2> multiply(const T& b) const
 	{
 		integer<BITS * 2> result;
+
+#ifdef _MSC_VER
+		if (BITS == 64)
+		{
+			result.low() = _umul128(this->t, b, &result.high());
+			return result;
+		}
+		else if (BITS == 32)
+		{
+			result = __emulu(this->t, b);
+			return result;
+		}
+#endif
 
 		T s0, s1, s2, s3;
 
