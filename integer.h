@@ -1234,7 +1234,7 @@ public:
 
 	integer<BITS * 2> multiply(const integer<BITS>& b) const
 	{
-		return multiply(T(b));
+		return multiply(b.t);
 	}
 
 	integer<BITS * 2> multiply(const T& b) const
