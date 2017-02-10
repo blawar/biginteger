@@ -120,11 +120,11 @@ public:
 	template<size_t PBITS>
 	integer<BITS + PBITS> operator*(const integer<PBITS>& b) const
 	{
-		/*if (BITS + PBITS >= 2048)
+		if (BITS + PBITS >= 2048 && BITS == PBITS)
 		{
 			return multiplyKaratsuba(b);
 		}
-		else*/
+		else
 		{
 			return multiply(b);
 		}
@@ -735,7 +735,8 @@ public:
 		return !(*this > n);
 	}
 
-	integer<BITS> operator+(const integer<BITS> n) const
+	template<size_t PBITS>
+	integer<BITS> operator+(const integer<PBITS> n) const
 	{
 		integer<BITS> temp = *this;
 		temp += n;
@@ -743,19 +744,36 @@ public:
 		return temp;
 	}
 
-	integer<BITS>& operator+=(const integer<BITS>& n)
+	integer<BITS> operator+(const word n) const
+	{
+		integer<BITS> temp = *this;
+		temp += n;
+
+		return temp;
+	}
+
+	template<size_t PBITS>
+	integer<BITS>& operator+=(const integer<PBITS>& n)
 	{
 		addWithCarry(n);
 
 		return *this;
 	}
 
-	bool addWithCarry(const integer<BITS>& n)
+	integer<BITS>& operator+=(const word n)
+	{
+		addWithCarry(n);
+		return *this;
+	}
+
+	template<size_t PBITS>
+	bool addWithCarry(const integer<PBITS>& n)
 	{
 		word num = 0;
 		int carry = 0;
-		long len = size();
-		for (long i = 0; i < len; i++)
+		long len = MIN(size(), n.size());
+		long i = 0;
+		for (; i < len; i++)
 		{
 			word a = read(i);
 			word b = n.read(i);
@@ -772,7 +790,57 @@ public:
 
 			write(i, num);
 		}
-		return carry;
+
+		if (!carry)
+		{
+			return false;
+		}
+
+		if (size() > n.size())
+		{
+			for (; i < size(); i++)
+			{
+				word a = read(i);
+				num = a + 1;
+				write(i, num);
+
+				if (num != 0)
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+		else
+		{
+			return carry;
+		}
+	}
+
+	bool addWithCarry(const word n)
+	{
+		word a = read(0);
+		word num = a + n;
+
+		write(0, num);
+
+		if (num >= a)
+		{
+			return false;
+		}
+
+		for (long i = 1; i < size(); i++)
+		{
+			word a = read(i);
+			num = a + 1;
+			write(i, num);
+
+			if (num != 0)
+			{
+				return false;
+			}
+		}
+		return true;
 	}
 
 	template<size_t PBITS>
