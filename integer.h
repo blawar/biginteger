@@ -536,11 +536,11 @@ public:
 
 			if (p > dividend)
 			{
-				max = mid - integer<BITS>(1);
+				max = mid - 1;
 			}
 			else if (posRem >= divisor)
 			{
-				min = mid + integer<BITS>(1);
+				min = mid + 1;
 			}
 			else
 			{
@@ -813,7 +813,7 @@ public:
 		}
 		else
 		{
-			return carry;
+			return true;
 		}
 	}
 
@@ -852,8 +852,22 @@ public:
 		return temp;
 	}
 
+	integer<BITS> operator-(const word n) const
+	{
+		integer<BITS> temp = *this;
+		temp -= n;
+
+		return temp;
+	}
+
 	template<size_t PBITS>
 	integer<BITS>& operator-=(const integer<PBITS>& n)
+	{
+		subtractWithBorrow(n);
+		return *this;
+	}
+
+	integer<BITS>& operator-=(const word n)
 	{
 		subtractWithBorrow(n);
 		return *this;
@@ -888,24 +902,7 @@ public:
 
 		if (size() < n.size())
 		{
-			for (; i < n.size(); i++)
-			{
-				word a = 0;
-				word b = n.read(i);
-				num = a - b - borrow;
-
-				if (num > a)
-				{
-					borrow = 1;
-					num += std::numeric_limits<word>::max() + 1;
-				}
-				else
-				{
-					borrow = 0;
-				}
-
-				//write(i, num);
-			}
+			return borrow;
 		}
 		else if (size() > n.size())
 		{
@@ -919,16 +916,48 @@ public:
 				{
 					borrow = 1;
 					num += std::numeric_limits<word>::max() + 1;
+					write(i, num);
 				}
 				else
 				{
-					borrow = 0;
+					write(i, num);
+					return false;
 				}
+			}
+			return true;
+		}
+		else
+		{
+			return borrow;
+		}
+	}
 
-				write(i, num);
+	bool subtractWithBorrow(const word n)
+	{
+		word a = read(0);
+		write(0, a - n);
+
+		if (a > n)
+		{
+			return false;
+		}
+
+		for (long i = 1; i < size(); i++)
+		{
+			word a = read(i);
+
+			if (a == 0)
+			{
+				write(i, std::numeric_limits<word>::max());
+			}
+			else
+			{
+				write(i, a - 1);
+				return false;
 			}
 		}
-		return borrow;
+		return true;
+
 	}
 
 	integer<BITS>& operator++(int)
