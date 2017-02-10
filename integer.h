@@ -3,6 +3,7 @@
 #define MINUS	-1
 
 #include <limits>
+#include <intrin.h>
 
 typedef uint64_t uint64;
 typedef uint32_t uint32;
@@ -52,7 +53,7 @@ public:
 		*this = n;
 	}
 
-	integer<BITS>(const char (&n)[BITS / 8 + 1])
+	integer<BITS>(const char(&n)[BITS / 8 + 1])
 	{
 		const word* ptr = (word*)n;
 		for (int i = 0; i < size(); i++)
@@ -223,27 +224,21 @@ public:
 	{
 		integer<BITS + PBITS> temp = 0;
 
-		int i, j;
-		for (i = 0; i < size(); ++i)
+		for (unsigned int i = 0; i < size(); ++i)
 		{
-			//if (read(i) != 0)
+			for (unsigned int j = 0; j < b.size(); ++j)
 			{
-				for (j = 0; j < b.size(); ++j)
+				integer<WORD_BITS * 2> c = integer<WORD_BITS>((*this)[i]) * integer<WORD_BITS>(b[j]);
+				//integer<WORD_BITS * 2> c = integer<WORD_BITS>::multiply((*this)[i],  b[j]);
+				c += temp[i + j];
+
+				temp[i + j] = c.low();
+
+				bool carry = addWithCarry(temp[i + j + 1], c.high());
+
+				for (unsigned int z = 2; carry; z++)
 				{
-					//if (b[j] != 0)
-					{
-						integer<WORD_BITS * 2> c = integer<WORD_BITS>((*this)[i]) * integer<WORD_BITS>(b[j]);
-						c += temp[i + j];
-
-						temp[i + j] = c.low();
-
-						bool carry = addWithCarry(temp[i + j + 1], c.high());
-
-						for (long z = 2; carry; z++)
-						{
-							carry = addWithCarry(temp[i + j + z], 1);
-						}
-					}
+					carry = addWithCarry(temp[i + j + z], 1);
 				}
 			}
 		}
@@ -295,10 +290,24 @@ public:
 		return result;
 	}
 
-	bool static addWithCarry(word& a, const word& b)
+	bool static addWithCarry(word& a, const word b)
 	{
 		word swap = a;
 		a += b;
+		return swap > a;
+	}
+
+	bool static addWithCarry(bool carry, word& a, const word b)
+	{
+		word swap = a;
+		a += b + carry;
+		return swap > a;
+	}
+
+	bool static addWithCarry(bool carry, word& a)
+	{
+		word swap = a;
+		a += carry;
 		return swap > a;
 	}
 
@@ -344,7 +353,7 @@ public:
 		return *this;
 	}
 
-	integer<BITS> operator>>(unsigned long shift) const
+	integer<BITS> operator >> (unsigned long shift) const
 	{
 		integer<BITS> temp = *this;
 		temp >>= shift;
@@ -407,7 +416,7 @@ public:
 		integer<BITS> product = 1;
 		integer<PBITS> sequence = *this % modulus;
 
-		while(exp != 0)
+		while (exp != 0)
 		{
 			if (exp & 1)
 			{
@@ -1199,7 +1208,7 @@ public:
 		/*HT* a = (HT*)&t;
 		HT* b = (HT*)&s;*/
 
-		const HT (&a)[2] = reinterpret_cast<const HT(&)[2]>(t);
+		const HT(&a)[2] = reinterpret_cast<const HT(&)[2]>(t);
 		const HT(&b)[2] = reinterpret_cast<const HT(&)[2]>(s);
 
 		for (int i = 0; i < 2; ++i)
@@ -1238,6 +1247,31 @@ public:
 	}
 
 	integer<BITS * 2> multiply(const T& b) const
+	{
+		integer<BITS * 2> result;
+
+		T s0, s1, s2, s3;
+
+		T x = (T)integer<BITS>(t).low() * integer<BITS>(b).low();
+		s0 = integer<BITS>(x).low();
+
+		x = (T)integer<BITS>(t).high() * integer<BITS>(b).low() + integer<BITS>(x).high();
+		s1 = integer<BITS>(x).low();
+		s2 = integer<BITS>(x).high();
+
+		x = s1 + (T)integer<BITS>(t).low() * integer<BITS>(b).high();
+		s1 = integer<BITS>(x).low();
+
+		x = s2 + (T)integer<BITS>(t).high() * integer<BITS>(b).high() + integer<BITS>(x).high();
+		s2 = integer<BITS>(x).low();
+		s3 = integer<BITS>(x).high();
+
+		result.low() = s1 << 32 | s0;
+		result.high() = s3 << 32 | s2;
+		return result;
+	}
+
+	static integer<BITS * 2> multiply(const T& t, const T& b)
 	{
 		integer<BITS * 2> result;
 
@@ -1312,7 +1346,7 @@ public:
 };
 
 template<>
-class integer<8>: public primitive<8, uint8, uint8>
+class integer<8> : public primitive<8, uint8, uint8>
 {
 public:
 	constexpr integer() : primitive() { }
