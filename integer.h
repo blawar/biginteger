@@ -1,6 +1,4 @@
 #pragma once
-#define PLUS	1
-#define MINUS	-1
 
 #include <limits>
 #ifdef _MSC_VER
@@ -133,6 +131,55 @@ public:
 		}
 	}
 
+	integer<BITS * 4> multiplyWithCarry(const integer<BITS>& b, bool a_carry, bool b_carry) const
+	{
+		const integer<BITS>& a = *this;
+		integer<BITS * 4> result;
+
+		integer<BITS>& s0 = result.low().low();
+		integer<BITS>& s1 = result.low().high();
+		integer<BITS>& s2 = result.high().low();
+		integer<BITS>& s3 = result.high().high();
+
+		integer<BITS * 2> x = a * b;
+
+		s0 = x.low();
+
+		x = integer<BITS * 2>(x).high();
+		if (a_carry)
+		{
+			x += b;
+		}
+
+		s1 = x.low();
+		s2 = x.high();
+
+		x = s1;
+		if (b_carry)
+		{
+			x += a;
+		}
+
+		s1 = x.low();
+
+
+		if (a_carry && b_carry)
+		{
+			x = integer<BITS * 2>(x).high();
+			x++;
+			x += s2;
+		}
+		else
+		{
+			x = integer<BITS * 2>(x).high();
+			x += s2;
+		}
+
+		s2 = x.low();
+		s3 = x.high();
+		return result;
+	}
+
 	integer<BITS * 2> multiplyWithCarry(const integer<BITS>& b) const
 	{
 		const integer<BITS>& a = *this;
@@ -241,6 +288,37 @@ public:
 		return temp;
 	}
 
+	template<size_t PBITS>
+	integer<(BITS + PBITS) / 2> multiplyHalf(const integer<PBITS>& b) const
+	{
+		integer<(BITS + PBITS) / 2> temp = 0;
+
+		for (unsigned int i = 0; i < size(); ++i)
+		{
+			for (unsigned int j = 0; j < b.size(); ++j)
+			{
+				if(i + j >= temp.size())
+				{
+					break;
+				}
+
+				integer<WORD_BITS * 2> c = integer<WORD_BITS>((*this)[i]) * integer<WORD_BITS>(b[j]);
+
+				c += temp[i + j];
+
+				temp[i + j] = c.low();
+
+				bool carry = addWithCarry(temp[i + j + 1], c.high());
+
+				for (unsigned int z = 2; carry; z++)
+				{
+					carry = addWithCarry(temp[i + j + z], 1);
+				}
+			}
+		}
+		return temp;
+	}
+
 	template<size_t PBITS, size_t P2BITS>
 	static integer<BITS + PBITS> multiplyKaratsuba(const integer<P2BITS>& a, const integer<PBITS>& b)
 	{
@@ -255,7 +333,7 @@ public:
 	template<size_t PBITS>
 	integer<BITS + PBITS> multiplyKaratsuba(const integer<PBITS>& b) const
 	{
-		const integer<PBITS>& a = *this;
+		const integer<BITS>& a = *this;
 
 		if (a.size() == 1 || b.size() == 1)
 		{
@@ -268,14 +346,15 @@ public:
 		const auto bl = b.low();
 		const auto bh = b.high();
 
-		integer<BITS> asum = al;
-		asum += ah;
-		integer<PBITS> bsum = bl;
-		bsum += bh;
+		integer<BITS / 2> asum = al;
+		bool a_carry = asum.addWithCarry(ah);
+		integer<PBITS / 2> bsum = bl;
+		bool b_carry = bsum.addWithCarry(bh);
 
 
 		const auto z0 = al * bl;
-		const integer<BITS + PBITS> z1 = asum.multiplyWithCarry(bsum);
+		const integer<BITS + PBITS> z1 = asum.multiplyWithCarry(bsum, a_carry, b_carry);
+		
 		//const integer<BITS + PBITS / 2> z1 = integer<BITS / 2>(asum) * integer<PBITS / 2>(bsum);
 		const auto z2 = ah * bh;
 
@@ -1306,6 +1385,68 @@ public:
 
 		result.low() = s1 << 32 | s0;
 		result.high() = s3 << 32 | s2;
+		return result;
+	}
+
+	integer<BITS * 2> multiplyWithCarry(const integer<BITS>& b, bool a_carry, bool b_carry) const
+	{
+		integer<BITS * 2> result;
+
+		HT& s0 = result.low().low();
+		HT& s1 = result.low().high();
+		HT& s2 = result.high().low();
+		HT& s3 = result.high().high();
+
+		integer<BITS * 2> x = (*this) * b;
+
+		s0 = x.low();
+
+		x = integer<BITS>(x).high();
+		if (a_carry)
+		{
+			x += b;
+		}
+
+		s1 = x.low();
+		s2 = x.high();
+
+		x = s1;
+		if (b_carry)
+		{
+			x += (*this);
+		}
+
+		s1 = x.low();
+
+
+		if (a_carry && b_carry)
+		{
+			x = integer<BITS>(x).high();
+			x++;
+			x += s2;
+		}
+		else
+		{
+			x = integer<BITS>(x).high();
+			x += s2;
+		}
+
+		s2 = x.low();
+		s3 = x.high();
+		return result;
+	}
+
+	template<size_t PBITS>
+	integer<BITS * 2> multiplyWithCarry(const integer<PBITS>& b, bool a_carry, bool b_carry) const
+	{
+		integer<BITS * 2> result;
+		return result;
+	}
+
+	template<size_t PBITS>
+	integer<BITS * 2> multiplyWithCarry(const integer<PBITS>& b) const
+	{
+		integer<BITS * 2> result;
 		return result;
 	}
 
