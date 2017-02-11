@@ -84,27 +84,6 @@ int main(int argc, const char * argv[])
 	integer<128> c = 42;
 	integer<2048> a;
 
-	/*{
-		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		unsigned long i;
-		for (i = 0; i < 0xffff; i++)
-		{
-			_sample.multiplyKaratsuba(modulus);
-		}
-		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		if ((end - start).count() == 0)
-		{
-			printf("multiply Karatsuba ops/sec = infinity\n");
-		}
-		else
-		{
-			printf("multiply Karatsuba ops/sec = %d\n", i * 1000 / (end - start).count());
-		}
-	}
-	return 0;*/
-	//powmodx(_sample, 0x100, modulus);
-	//return 0;
-
 	assert(
 		integer<128>("\xFF\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
 		-

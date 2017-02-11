@@ -127,7 +127,7 @@ public:
 	template<size_t PBITS>
 	integer<BITS + PBITS> operator*(const integer<PBITS>& b) const
 	{
-		if (BITS + PBITS >= 4096 && BITS == PBITS)
+		if (BITS + PBITS >= 512 && BITS == PBITS)
 		{
 			return multiplyKaratsuba(b);
 		}
@@ -166,7 +166,6 @@ public:
 		}
 
 		s1 = x.low();
-
 
 		if (a_carry && b_carry)
 		{
@@ -339,11 +338,6 @@ public:
 	{
 		const integer<BITS>& a = *this;
 
-		if (a.size() == 1 || b.size() == 1)
-		{
-			return a * b;
-		}
-
 		const auto al = a.low();
 		const auto ah = a.high();
 
@@ -358,8 +352,6 @@ public:
 
 		const auto z0 = al * bl;
 		const auto z1 = asum.multiplyWithCarry(bsum, a_carry, b_carry);
-		
-		//const integer<BITS + PBITS / 2> z1 = integer<BITS / 2>(asum) * integer<PBITS / 2>(bsum);
 		const auto z2 = ah * bh;
 
 		integer<BITS + PBITS> result;
