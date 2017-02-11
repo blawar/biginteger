@@ -138,7 +138,11 @@ public:
 		const integer<BITS>& a = *this;
 		integer<BITS * 2> result;
 
-		integer<BITS> s0, s1, s2, s3;
+		integer<BITS / 2>& s0 = result.low().low();
+		integer<BITS / 2>& s1 = result.low().high();
+		integer<BITS / 2>& s2 = result.high().low();
+		integer<BITS / 2>& s3 = result.high().high();
+
 		bool bh = !b.high().empty();
 		bool ah = !a.high().empty();
 
@@ -178,11 +182,6 @@ public:
 		}
 		s2 = x.low();
 		s3 = x.high();
-
-		result.low().low() = s0;
-		result.low().high() = s1;
-		result.high().low() = s2;
-		result.high().high() = s3;
 		return result;
 	}
 
