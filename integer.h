@@ -107,7 +107,7 @@ public:
 		int i, j;
 		for (i = 0; i < size(); ++i)
 		{
-			if (read(i) != 0)
+			//if (read(i) != 0)
 			{
 				integer<WORD_BITS * 2> c = integer<WORD_BITS>(read(i)) * integer<WORD_BITS>(n);
 				c += temp[i];
@@ -137,13 +137,14 @@ public:
 		}
 	}
 
-	integer<BITS * 4> multiplyWithCarry(const integer<BITS>& b, bool a_carry, bool b_carry) const
+	template<size_t PBITS>
+	integer<(BITS + PBITS) * 2> multiplyWithCarry(const integer<PBITS>& b, bool a_carry, bool b_carry) const
 	{
 		const integer<BITS>& a = *this;
-		integer<BITS * 4> result;
+		integer<(BITS + PBITS) * 2> result;
 
-		integer<BITS>& s0 = result.low().low();
-		integer<BITS>& s1 = result.low().high();
+		auto& s0 = result.low().low();
+		auto& s1 = result.low().high();
 		word& s2 = result.high().low().first();
 
 		integer<BITS * 2> x = a * b;
@@ -156,10 +157,9 @@ public:
 			x += b;
 		}
 
-		s1 = x.low();
-		s2 = x.high().first();
+		word tmps2 = x.high().first();
 
-		x = s1;
+		x = integer<BITS * 2>(x).low();
 		if (b_carry)
 		{
 			x += a;
@@ -172,12 +172,12 @@ public:
 		{
 			x = integer<BITS * 2>(x).high();
 			x++;
-			x += s2;
+			x += tmps2;
 		}
 		else
 		{
 			x = integer<BITS * 2>(x).high();
-			x += s2;
+			x += tmps2;
 		}
 
 		s2 = x.low().first();
@@ -1157,6 +1157,11 @@ public:
 		return buffer[i];
 	}
 
+	word& read(unsigned long i)
+	{
+		return buffer[i];
+	}
+
 	void write(unsigned long i, word value)
 	{
 		buffer[i] = value;
@@ -1209,17 +1214,11 @@ public:
 	const constexpr integer<BITS / 2>& low() const
 	{
 		return reinterpret_cast<const integer<BITS / 2>&>(*this);
-		/*integer<BITS / 2> temp = *this;
-		memcpy(&temp, (byte*)buffer, BITS / 8 / 2);
-		return temp;*/
 	}
 
 	const constexpr integer<BITS / 2>& high() const
 	{
 		return reinterpret_cast<const integer<BITS / 2>&>(*(buffer + size() / 2));
-		/*integer<BITS / 2> temp;
-		memcpy(&temp, (byte*)buffer + (BITS / 8 / 2), BITS / 8 / 2);
-		return temp;*/
 	}
 
 	integer<BITS / 2>& low()
@@ -1230,6 +1229,18 @@ public:
 	integer<BITS / 2>& high()
 	{
 		return reinterpret_cast<integer<BITS / 2>&>(*(buffer + size() / 2));
+	}
+
+	template<size_t PBITS>
+	integer<PBITS / 2>& low()
+	{
+		return reinterpret_cast<integer<PBITS / 2>&>(*this);
+	}
+
+	template<size_t PBITS>
+	integer<PBITS / 2>& high()
+	{
+		return reinterpret_cast<integer<PBITS / 2>&>(*(buffer + (PBITS / WORD_BITS) / 2));
 	}
 
 	bool bit(unsigned long i)
