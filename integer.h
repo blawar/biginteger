@@ -94,6 +94,12 @@ public:
 	const word* operator &() const { return buffer; }
 	word* operator &() { return buffer; }
 
+	const constexpr word& first() const { return *buffer; }
+	word& first() { return *buffer; }
+
+	const constexpr word& last() const { return read(size()-1); }
+	word& last() { return read(size()-1); }
+
 	integer<BITS + (WORD_BITS)> operator*(word n)
 	{
 		integer<BITS + (sizeof(n) * 8)> temp = 0;
@@ -138,7 +144,7 @@ public:
 
 		integer<BITS>& s0 = result.low().low();
 		integer<BITS>& s1 = result.low().high();
-		integer<BITS>& s2 = result.high().low();
+		word& s2 = result.high().low().first();
 
 		integer<BITS * 2> x = a * b;
 
@@ -151,7 +157,7 @@ public:
 		}
 
 		s1 = x.low();
-		s2 = x.high();
+		s2 = x.high().first();
 
 		x = s1;
 		if (b_carry)
@@ -174,7 +180,7 @@ public:
 			x += s2;
 		}
 
-		s2 = x.low();
+		s2 = x.low().first();
 		return result;
 	}
 
@@ -1252,6 +1258,12 @@ public:
 	operator T& () { return t; }
 	const T* operator& () const { return &t; }
 	T* operator& () { return &t; }
+
+	const constexpr word& first() const { return t; }
+	word& first() { return t; }
+
+	const constexpr word& last() const { return t; }
+	word& last() { return t; }
 
 	bool addWithCarry(const T& b)
 	{
