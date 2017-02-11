@@ -133,7 +133,7 @@ public:
 		}
 	}
 
-	integer<BITS * 2> multiplyWithOverflow(const integer<BITS>& b) const
+	integer<BITS * 2> multiplyWithCarry(const integer<BITS>& b) const
 	{
 		const integer<BITS>& a = *this;
 		integer<BITS * 2> result;
@@ -178,8 +178,8 @@ public:
 		{
 			x = integer<BITS>(x).high();
 			x += s2;
-
 		}
+
 		s2 = x.low();
 		s3 = x.high();
 		return result;
@@ -275,7 +275,7 @@ public:
 
 
 		const auto z0 = al * bl;
-		const integer<BITS + PBITS> z1 = asum.multiplyWithOverflow(bsum);
+		const integer<BITS + PBITS> z1 = asum.multiplyWithCarry(bsum);
 		//const integer<BITS + PBITS / 2> z1 = integer<BITS / 2>(asum) * integer<PBITS / 2>(bsum);
 		const auto z2 = ah * bh;
 
