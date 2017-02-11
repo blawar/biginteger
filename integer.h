@@ -133,7 +133,7 @@ public:
 		}
 	}
 
-	integer<BITS * 2> multiplyWithCarry(const integer<BITS>& b) const
+	integer<BITS * 2> multiplyWithOverflow(const integer<BITS>& b) const
 	{
 		const integer<BITS>& a = *this;
 		integer<BITS * 2> result;
@@ -141,11 +141,6 @@ public:
 		integer<BITS> s0, s1, s2, s3;
 		bool bh = !b.high().empty();
 		bool ah = !a.high().empty();
-
-		if (!bh && !ah)
-		{
-			return a.low() * b.low();
-		}
 
 		integer<BITS> x = a.low() * b.low();
 
@@ -231,7 +226,7 @@ public:
 			for (unsigned int j = 0; j < b.size(); ++j)
 			{
 				integer<WORD_BITS * 2> c = integer<WORD_BITS>((*this)[i]) * integer<WORD_BITS>(b[j]);
-				//integer<WORD_BITS * 2> c = integer<WORD_BITS>::multiply((*this)[i],  b[j]);
+
 				c += temp[i + j];
 
 				temp[i + j] = c.low();
@@ -281,7 +276,7 @@ public:
 
 
 		const auto z0 = al * bl;
-		const integer<BITS + PBITS> z1 = asum.multiplyWithCarry(bsum);
+		const integer<BITS + PBITS> z1 = asum.multiplyWithOverflow(bsum);
 		//const integer<BITS + PBITS / 2> z1 = integer<BITS / 2>(asum) * integer<PBITS / 2>(bsum);
 		const auto z2 = ah * bh;
 
@@ -781,13 +776,16 @@ public:
 	bool addWithCarry(const integer<PBITS>& n)
 	{
 		word num = 0;
-		int carry = 0;
+		bool carry = 0;
 		long len = MIN(size(), n.size());
 		long i = 0;
 		for (; i < len; i++)
 		{
 			word a = read(i);
 			word b = n.read(i);
+#ifdef _MSC_VER
+			carry = _addcarry_u64(carry, a, b, &num);
+#else
 			num = a + b + carry;
 
 			if (num < a || num < b)
@@ -798,6 +796,7 @@ public:
 			{
 				carry = 0;
 			}
+#endif
 
 			write(i, num);
 		}
