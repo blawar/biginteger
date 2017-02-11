@@ -139,7 +139,6 @@ public:
 		integer<BITS>& s0 = result.low().low();
 		integer<BITS>& s1 = result.low().high();
 		integer<BITS>& s2 = result.high().low();
-		integer<BITS>& s3 = result.high().high();
 
 		integer<BITS * 2> x = a * b;
 
@@ -176,7 +175,6 @@ public:
 		}
 
 		s2 = x.low();
-		s3 = x.high();
 		return result;
 	}
 
@@ -353,7 +351,7 @@ public:
 
 
 		const auto z0 = al * bl;
-		const integer<BITS + PBITS> z1 = asum.multiplyWithCarry(bsum, a_carry, b_carry);
+		const auto z1 = asum.multiplyWithCarry(bsum, a_carry, b_carry);
 		
 		//const integer<BITS + PBITS / 2> z1 = integer<BITS / 2>(asum) * integer<PBITS / 2>(bsum);
 		const auto z2 = ah * bh;
