@@ -72,6 +72,104 @@ int mul_inv(int a, int b)
 	return x1;
 }
 
+template<size_t BITS>
+void benchmark()
+{
+	integer<BITS> _sample;
+	integer<BITS> modulus;
+
+	{
+		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		unsigned long i;
+		for (i = 0; i < 0x100000; i++)
+		{
+			_sample + modulus;
+		}
+		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		if ((end - start).count() == 0)
+		{
+			printf("addition %d ops/sec = infinity\n", BITS);
+		}
+		else
+		{
+			printf("addition %d ops/sec = %d\n", BITS, i * 1000 / (end - start).count());
+		}
+	}
+
+	{
+		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		unsigned long i;
+		for (i = 0; i < 0x100000; i++)
+		{
+			_sample - modulus;
+		}
+		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		if ((end - start).count() == 0)
+		{
+			printf("subtraction %d ops/sec = infinity\n", BITS);
+		}
+		else
+		{
+			printf("subtraction %d ops/sec = %d\n", BITS, i * 1000 / (end - start).count());
+		}
+	}
+
+	{
+		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		unsigned long i;
+		for (i = 0; i < 0x100000; i++)
+		{
+			_sample / modulus;
+		}
+		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		if ((end - start).count() == 0)
+		{
+			printf("divide %d ops/sec = infinity\n", BITS);
+		}
+		else
+		{
+			printf("divide %d ops/sec = %d\n", BITS, i * 1000 / (end - start).count());
+		}
+	}
+
+	{
+		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		unsigned long i;
+		for (i = 0; i < 0x1000; i++)
+		{
+			_sample.multiply(modulus);
+		}
+		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		if ((end - start).count() == 0)
+		{
+			printf("multiply %d ops/sec = infinity\n", BITS);
+		}
+		else
+		{
+			printf("multiply %d ops/sec = %d\n", BITS, i * 1000 / (end - start).count());
+		}
+	}
+
+	{
+		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		unsigned long i;
+		for (i = 0; i < 0x10000; i++)
+		{
+			_sample.multiplyKaratsuba(modulus);
+		}
+		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		if ((end - start).count() == 0)
+		{
+			printf("multiply %d Karatsuba ops/sec = infinity\n", BITS);
+		}
+		else
+		{
+			printf("multiply %d Karatsuba ops/sec = %d\n", BITS, i * 1000 / (end - start).count());
+		}
+	}
+	printf("\n*******************************************\n\n");
+}
+
 int main(int argc, const char * argv[])
 {    
     clock_t c_start, c_stop;
@@ -218,187 +316,11 @@ int main(int argc, const char * argv[])
 	//modulus.modularInverse(integer<2048>(0xFFFF)).print();
 	//return 0;
 	
-	{
-		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		unsigned long i;
-		for (i = 0; i < 0x100000; i++)
-		{
-			_sample + modulus;
-		}
-		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		if ((end - start).count() == 0)
-		{
-			printf("addition ops/sec = infinity\n");
-		}
-		else
-		{
-			printf("addition ops/sec = %d\n", i * 1000 / (end - start).count());
-		}
-	}
-
-	{
-		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		unsigned long i;
-		for (i = 0; i < 0x100000; i++)
-		{
-			_sample - modulus;
-		}
-		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		if ((end - start).count() == 0)
-		{
-			printf("subtraction ops/sec = infinity\n");
-		}
-		else
-		{
-			printf("subtraction ops/sec = %d\n", i * 1000 / (end - start).count());
-		}
-	}
-
-	{
-		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		unsigned long i;
-		integer<64> t = 0xabcdef0012345678;
-		integer<128> r;
-		for (i = 0; i < 0x1f0000; i++)
-		{
-			r = t * t;
-		}
-		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		if ((end - start).count() == 0)
-		{
-			printf("multiply 64-bit ops/sec = infinity\n");
-		}
-		else
-		{
-			printf("multiply 64-bit ops/sec = %d\n", i * 1000 / (end - start).count());
-		}
-	}
-
-	{
-		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		unsigned long i;
-		for (i = 0; i < 0x1000; i++)
-		{
-			_sample.multiply(modulus);
-		}
-		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		if ((end - start).count() == 0)
-		{
-			printf("multiply 2048 ops/sec = infinity\n");
-		}
-		else
-		{
-			printf("multiply 2048 ops/sec = %d\n", i * 1000 / (end - start).count());
-		}
-	}
-
-	{
-		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		unsigned long i;
-		for (i = 0; i < 0x10000; i++)
-		{
-			_sample.multiplyKaratsuba(modulus);
-		}
-		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		if ((end - start).count() == 0)
-		{
-			printf("multiply 2048 Karatsuba ops/sec = infinity\n");
-		}
-		else
-		{
-			printf("multiply 2048 Karatsuba ops/sec = %d\n", i * 1000 / (end - start).count());
-		}
-	}
-
-	{
-		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		unsigned long i;
-		for (i = 0; i < 0x1000; i++)
-		{
-			_sample4096.multiply(modulus4096);
-		}
-		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		if ((end - start).count() == 0)
-		{
-			printf("multiply 4096 ops/sec = infinity\n");
-		}
-		else
-		{
-			printf("multiply 4096 ops/sec = %d\n", i * 1000 / (end - start).count());
-		}
-	}
-
-	/*{
-		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		unsigned long i;
-		for (i = 0; i < 0x1000; i++)
-		{
-			_sample4096.multiplyHalf(modulus4096);
-		}
-		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		if ((end - start).count() == 0)
-		{
-			printf("multiply half 4096 ops/sec = infinity\n");
-		}
-		else
-		{
-			printf("multiply half 4096 ops/sec = %d\n", i * 1000 / (end - start).count());
-		}
-	}*/
-
-	{
-		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		unsigned long i;
-		for (i = 0; i < 0x10000; i++)
-		{
-			_sample4096.multiplyKaratsuba(modulus4096);
-		}
-		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		if ((end - start).count() == 0)
-		{
-			printf("multiply 4096 Karatsuba ops/sec = infinity\n");
-		}
-		else
-		{
-			printf("multiply 4096 Karatsuba ops/sec = %d\n", i * 1000 / (end - start).count());
-		}
-	}
-
-	{
-		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		unsigned long i;
-		for (i = 0; i < 0x1000; i++)
-		{
-			_sample8192.multiply(modulus8192);
-		}
-		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		if ((end - start).count() == 0)
-		{
-			printf("multiply 8192 ops/sec = infinity\n");
-		}
-		else
-		{
-			printf("multiply 8192 ops/sec = %d\n", i * 1000 / (end - start).count());
-		}
-	}
-
-	{
-		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		unsigned long i;
-		for (i = 0; i < 0x10000; i++)
-		{
-			_sample8192.multiplyKaratsuba(modulus8192);
-		}
-		std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		if ((end - start).count() == 0)
-		{
-			printf("multiply 8192 Karatsuba ops/sec = infinity\n");
-		}
-		else
-		{
-			printf("multiply 8192 Karatsuba ops/sec = %d\n", i * 1000 / (end - start).count());
-		}
-	}
+	benchmark<64>();
+	benchmark<1024>();
+	benchmark<2048>();
+	benchmark<4096>();
+	benchmark<8192>();
 
 	{
 		std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
