@@ -1,11 +1,3 @@
-//
-//  CasRSA_CL.c
-//  CasRSA_CL
-//
-//  Created by Carter McCardwell on 11/18/15.
-//  Copyright (c) 2015 Carter McCardwell. All rights reserved.
-//
-
 #define __NO_STD_VECTOR
 #define MAX_SOURCE_SIZE (0x100000)
 
